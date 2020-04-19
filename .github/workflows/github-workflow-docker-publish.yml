@@ -30,7 +30,7 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: 运行执行脚本 Run a multi-line script
       run: |
-        ENV_DOCKERIMAGE_THISTAG="$GITHUB_RUN_NUMBER"
+        export ENV_DOCKERIMAGE_THISTAG="$GITHUB_RUN_NUMBER"
         ./run-docker-build-publish.sh
       env:
         ENV_DOCKER_USERNAME: ${{ github.actor }}

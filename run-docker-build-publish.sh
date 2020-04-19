@@ -15,11 +15,11 @@ run__DockerBuildPublish() {
 
     # make sure prerequisites
     ## install Docker
-    docker 2>/dev/null || {
+    docker version 2>/dev/null || {
       printf -- "\n[$(date) @ X] 安装Docker应用 Install Docker\n"
       wget -qO- http://get.docker.io | sh \
       && sudo usermod -aG docker $USER \
-      && docker 2>/dev/null
+      && docker version 2>/dev/null
     } || break
 
     # init project directories
@@ -35,22 +35,22 @@ run__DockerBuildPublish() {
     local var_dockerimage_filebasename="dockerimg@@${ENV_DOCKER_USERNAME}@${var_dockerimage_reponame}"
 
     echo "本地构建 Docker Image: ${var_dockerimage_reponame}"
-    docker build . --file "Dockerfile_${ENV_DOCKER_USERNAME}@${var_dockerimage_reponame}" \
+    sudo docker build . --file "Dockerfile_${ENV_DOCKER_USERNAME}@${var_dockerimage_reponame}" \
       --tag "${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG" || break
 
-    docker tag "${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG" \
+    sudo docker tag "${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG" \
       "${var_dockerimage_imagename}:latest" || break
 
     echo "即将发布 Docker Image: ${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG"
-    # echo "${ENV_DOCKER_TOKEN}" | docker login -u "${ENV_DOCKER_USERNAME}" --password-stdin || break
-    docker login -u "${ENV_DOCKER_USERNAME}" -p "${ENV_DOCKER_TOKEN}" || break
+    # echo "${ENV_DOCKER_TOKEN}" | sudo docker login -u "${ENV_DOCKER_USERNAME}" --password-stdin || break
+    sudo docker login -u "${ENV_DOCKER_USERNAME}" -p "${ENV_DOCKER_TOKEN}" || break
     
-    docker push "${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG" || break
-    docker push "${var_dockerimage_imagename}:latest" || break
+    sudo docker push "${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG" || break
+    sudo docker push "${var_dockerimage_imagename}:latest" || break
     
-    docker logout || break
-    # docker images
-    docker save "${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG" \
+    sudo docker logout || break
+    # sudo docker images
+    sudo docker save "${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG" \
       > "${var_dockerimage_filebasename}@$ENV_DOCKERIMAGE_THISTAG.tar" || break
 
     echo "已顺利发布 Docker Image: ${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG"

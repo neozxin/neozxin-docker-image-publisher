@@ -51,7 +51,7 @@ run__DockerBuildPublish() {
     sudo docker logout || break
     # sudo docker images
     sudo docker save "${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG" \
-      > "${var_dockerimage_filebasename}@$ENV_DOCKERIMAGE_THISTAG.tar" || break
+      > "${var_main_dist_dirname}/${var_dockerimage_filebasename}@$ENV_DOCKERIMAGE_THISTAG.tar" || break
 
     echo "已顺利发布 Docker Image: ${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG"
     return
@@ -70,6 +70,7 @@ main() {
       echo "Feature coming soon" || break
     else
       printf -- "\n使用示例 Usage example: $0\n"
+      printf -- "\n使用示例 Usage example: $0 '' USERNAME USERTOKEN 'latest' 'node12-ci'\n"
       printf -- "\n使用示例 Usage example: $0 use.files\n"
       printf -- "\n使用示例 Usage example: $0 use.account\n"
       break

@@ -42,8 +42,7 @@ run__DockerBuildPublish() {
       "${var_dockerimage_imagename}:latest" || break
 
     echo "即将发布 Docker Image: ${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG"
-    # echo "${ENV_DOCKER_TOKEN}" | docker login -u "${ENV_DOCKER_USERNAME}" --password-stdin || break
-    docker login -u "${ENV_DOCKER_USERNAME}" -p "${ENV_DOCKER_TOKEN}" || break
+    echo "${ENV_DOCKER_TOKEN}" | docker login -u "${ENV_DOCKER_USERNAME}" || break
     
     docker push "${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG" || break
     docker push "${var_dockerimage_imagename}:latest" || break

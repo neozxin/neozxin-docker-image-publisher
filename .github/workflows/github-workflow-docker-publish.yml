@@ -35,6 +35,6 @@ jobs:
       env:
         ENV_CI_DOCKER_USERNAME: ${{ github.actor }}
         ENV_CI_DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-        ENV_CI_DOCKERIMAGE_FEATURENAME: "dev-gate-server"
+        ENV_CI_DOCKERIMAGE_FEATURENAME: "dev-desktop-x11vnc"
         ENV_CI_DOCKERIMAGE_REPOURL: "https://github.com/neozxin/ubuntu-init.git"
         ENV_CI_DOCKERIMAGE_REPOYML: "./dev-servers/docker-compose.yml"

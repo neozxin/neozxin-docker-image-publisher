@@ -24,7 +24,7 @@ jobs:
         echo "当前目录为: $GITHUB_WORKSPACE"
 
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - name: 代码获取Checkout code
+    - name: 代码获取 Checkout code
       uses: actions/checkout@v2
 
     # Runs a set of commands using the runners shell
@@ -38,3 +38,10 @@ jobs:
         ENV_CI_DOCKERIMAGE_FEATURENAME: "dev-desktop-x11vnc"
         ENV_CI_DOCKERIMAGE_REPOURL: "https://github.com/neozxin/ubuntu-init.git"
         ENV_CI_DOCKERIMAGE_REPOYML: "./dev-servers/docker-compose.yml"
+
+    # Upload artifacts
+    - name: 上传产出包 Upload artifacts
+    - uses: actions/upload-artifact@v2
+      with:
+        name: my-artifact
+        path: ${{ github.workspace }}

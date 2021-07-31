@@ -41,7 +41,7 @@ jobs:
 
     # Upload artifacts
     - name: 上传产出包 Upload artifacts
-    - uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v2
       with:
         name: my-artifact
         path: ${{ github.workspace }}

@@ -32,7 +32,7 @@ run__DockerBuildPublish() {
 
     local var_dockerimage_reponame="${ENV_DOCKERIMAGE_REPONAME}"
     local var_dockerimage_imagename="${ENV_DOCKER_USERNAME}/${var_dockerimage_reponame}"
-    local var_dockerimage_filebasename="dockerimg@@${ENV_DOCKER_USERNAME}@${var_dockerimage_reponame}"
+    local var_dockerimage_filebasename="dockerimg@${ENV_DOCKER_USERNAME}@${var_dockerimage_reponame}"
 
     echo "本地构建 Docker Image: ${var_dockerimage_reponame}"
     sudo docker build . --file "Dockerfile_${ENV_DOCKER_USERNAME}@${var_dockerimage_reponame}" \

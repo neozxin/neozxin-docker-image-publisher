@@ -40,7 +40,7 @@ run__DockerBuildPublish() {
     if [ -n "${ENV_CI_DOCKERIMAGE_REPOURL}" ]; then
       local var_localrepopath=".${ENV_CI_DOCKERIMAGE_THISTAG}-$(basename "${ENV_CI_DOCKERIMAGE_REPOURL}")"
       git clone "${ENV_CI_DOCKERIMAGE_REPOURL}" "${var_localrepopath}" || break
-      sudo env ENV_CI_DOCKERIMAGE_THISTAG="${ENV_CI_DOCKERIMAGE_THISTAG}" docker-compose -f "${var_localrepopath}/${ENV_CI_DOCKERIMAGE_REPOYML}" build || break
+      sudo env ENV_DOCKERC_TAG="${ENV_CI_DOCKERIMAGE_THISTAG}" docker-compose -f "${var_localrepopath}/${ENV_CI_DOCKERIMAGE_REPOYML}" build || break
     else
       sudo docker build . --file "Dockerfile_${ENV_CI_DOCKER_USERNAME}@${var_dockerimage_featurename}" \
         --tag "${var_dockerimage_imagename}:$ENV_CI_DOCKERIMAGE_THISTAG" || break

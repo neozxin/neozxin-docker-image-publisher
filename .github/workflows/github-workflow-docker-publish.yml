@@ -35,4 +35,6 @@ jobs:
       env:
         ENV_DOCKER_USERNAME: ${{ github.actor }}
         ENV_DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-        ENV_DOCKERIMAGE_REPONAME: "node12-ci"
+        ENV_DOCKERIMAGE_FEATURENAME: "dev-gate-server"
+        ENV_DOCKERIMAGE_REPOURL: "https://github.com/neozxin/ubuntu-init.git"
+        ENV_DOCKERIMAGE_REPOYML: "./dev-servers/docker-compose.yml"

@@ -28,15 +28,23 @@ run__DockerBuildPublish() {
     [ -z "${ENV_DOCKER_USERNAME}" ] && local ENV_DOCKER_USERNAME="$2"  # "${{ github.actor }}"
     [ -z "${ENV_DOCKER_TOKEN}" ] && local ENV_DOCKER_TOKEN="$3"  # "${{ secrets.DOCKERHUB_TOKEN }}"
     [ -z "${ENV_DOCKERIMAGE_THISTAG}" ] && local ENV_DOCKERIMAGE_THISTAG="$4"  # "$GITHUB_RUN_NUMBER"
-    [ -z "${ENV_DOCKERIMAGE_REPONAME}" ] && local ENV_DOCKERIMAGE_REPONAME="$5"  # e.g. "node12-ci"
+    [ -z "${ENV_DOCKERIMAGE_FEATURENAME}" ] && local ENV_DOCKERIMAGE_FEATURENAME="$5"  # e.g. "node12-ci", "dev-gate-server"
+    [ -z "${ENV_DOCKERIMAGE_REPOURL}" ] && local ENV_DOCKERIMAGE_REPOURL="$6"  # e.g. "https://github.com/neozxin/neozxin-docker-image-publisher.git"
+    [ -z "${ENV_DOCKERIMAGE_REPOYML}" ] && local ENV_DOCKERIMAGE_REPOYML="$7"  # e.g. "./dev-servers/docker-compose.yml"
 
-    local var_dockerimage_reponame="${ENV_DOCKERIMAGE_REPONAME}"
-    local var_dockerimage_imagename="${ENV_DOCKER_USERNAME}/${var_dockerimage_reponame}"
-    local var_dockerimage_filebasename="dockerimg@${ENV_DOCKER_USERNAME}@${var_dockerimage_reponame}"
+    local var_dockerimage_featurename="${ENV_DOCKERIMAGE_FEATURENAME}"
+    local var_dockerimage_imagename="${ENV_DOCKER_USERNAME}/${var_dockerimage_featurename}"
+    local var_dockerimage_filebasename="dockerimg@${ENV_DOCKER_USERNAME}@${var_dockerimage_featurename}"
 
-    echo "本地构建 Docker Image: ${var_dockerimage_reponame}"
-    sudo docker build . --file "Dockerfile_${ENV_DOCKER_USERNAME}@${var_dockerimage_reponame}" \
-      --tag "${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG" || break
+    echo "本地构建 Docker Image: ${var_dockerimage_featurename}"
+    if [ -n "${ENV_DOCKERIMAGE_REPOURL}" ]; then
+      local var_localrepopath=".${ENV_DOCKERIMAGE_THISTAG}-$(basename "${ENV_DOCKERIMAGE_REPOURL}")"
+      git clone "${ENV_DOCKERIMAGE_REPOURL}" "${var_localrepopath}" || break
+      sudo env ENV_DOCKERC_TAG="${ENV_DOCKERIMAGE_THISTAG}" docker-compose -f "${var_localrepopath}/${ENV_DOCKERIMAGE_REPOYML}" build || break
+    else
+      sudo docker build . --file "Dockerfile_${ENV_DOCKER_USERNAME}@${var_dockerimage_featurename}" \
+        --tag "${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG" || break
+    fi
 
     sudo docker tag "${var_dockerimage_imagename}:$ENV_DOCKERIMAGE_THISTAG" \
       "${var_dockerimage_imagename}:latest" || break

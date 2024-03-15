@@ -11,5 +11,10 @@ RUN make release
 ### run stage ###
 FROM scratch
 COPY --from=stage-0_build-bin /src/asmttpd/asmttpd /asmttpd
-# COPY /web_root/index.html /web_root/index.html
+COPY <<EOF /web_root/index.html
+<html>
+  <head><title>x-asmttpd</title></head>
+  <body><h1>hello world from x-asmttpd @ </h1><script>setTimeout(function(){document.querySelector('h1').innerHTML+=Date()})</script></body>
+</html>
+EOF
 CMD ["/asmttpd", "/web_root", "8080"]

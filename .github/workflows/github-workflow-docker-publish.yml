@@ -36,9 +36,9 @@ jobs:
       env:
         ENV_CI_DOCKER_USERNAME: ${{ github.actor }}
         ENV_CI_DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-        ENV_CI_DOCKERIMAGE_FEATURENAME: "dev-desktop-terminal"
-        ENV_CI_DOCKERIMAGE_REPOURL: "https://github.com/neozxin/ubuntu-init.git"
-        ENV_CI_DOCKERIMAGE_REPOYML: "./dev-servers/docker-compose.yml"
+        ENV_CI_DOCKERIMAGE_FEATURENAME: "httpgo"
+        ENV_CI_DOCKERIMAGE_REPOURL: ""
+        ENV_CI_DOCKERIMAGE_REPOYML: ""
 
     # Upload artifacts
     - name: 上传产出包 Upload artifacts

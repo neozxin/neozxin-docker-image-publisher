@@ -36,7 +36,7 @@ jobs:
       env:
         ENV_CI_DOCKER_USERNAME: ${{ github.actor }}
         ENV_CI_DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-        ENV_CI_DOCKERIMAGE_FEATURENAME: "httpgo"
+        ENV_CI_DOCKERIMAGE_FEATURENAME: "httpasm"
         ENV_CI_DOCKERIMAGE_REPOURL: ""
         ENV_CI_DOCKERIMAGE_REPOYML: ""
 

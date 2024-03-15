@@ -5,12 +5,11 @@ RUN apt update
 RUN apt install -y git make yasm as31 nasm binutils
 RUN git clone https://github.com/nemasu/asmttpd.git
 WORKDIR /src/asmttpd
-
 # COPY . .
 RUN make release
 
 ### run stage ###
 FROM scratch
-COPY --from=stage-0_build-bin /src/asmttpd /asmttpd
+COPY --from=stage-0_build-bin /src/asmttpd/asmttpd /asmttpd
 # COPY /web_root/index.html /web_root/index.html
 CMD ["/asmttpd", "/web_root", "8080"]

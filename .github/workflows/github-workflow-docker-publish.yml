@@ -48,7 +48,7 @@ jobs:
         export ENV_CI_DOCKERIMAGE_THISTAG="$GITHUB_RUN_NUMBER"
         docker pull "${{ github.event.inputs.target_docker_image }}"
         docker save "${{ github.event.inputs.target_docker_image }}" | gzip > docker-image-saved.tar.gz
-        echo "[($date)]: ${{ github.event.inputs.target_docker_image }}" > docker-image-saved.txt
+        echo "[$(date)]: ${{ github.event.inputs.target_docker_image }}" > docker-image-saved.txt
       env:
         ENV_CI_DOCKERIMAGE_FROM: ${{ github.event.inputs.target_docker_image }}
 

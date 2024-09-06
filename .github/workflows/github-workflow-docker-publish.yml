@@ -33,9 +33,11 @@ jobs:
     steps:
     - name: 显示基本信息 Output basic info
       run: |
-        echo "当前Build ID: $GITHUB_RUN_ID"
-        echo "当前Build Number: $GITHUB_RUN_NUMBER"
+        echo "当前 Build ID: $GITHUB_RUN_ID"
+        echo "当前 Build Number: $GITHUB_RUN_NUMBER"
         echo "当前目录为: $GITHUB_WORKSPACE"
+        echo "当前 github.event.inputs.what_to_do: ${{ github.event.inputs.what_to_do }}"
+        echo "当前 github.event.inputs.target_docker_image: ${{ github.event.inputs.target_docker_image }}"
 
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: 代码获取 Checkout code

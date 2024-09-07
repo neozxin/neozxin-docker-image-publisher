@@ -79,6 +79,7 @@ jobs:
     - name: 准备脚本环境 Init running environment
       run: |
         mkdir -p "${ENV_CI_DIST_DIR}"
+        ls -la
 
     # Runs a set of commands using the runners shell
     - name: 运行执行脚本 Run a multi-line script - create_image_snapshot
@@ -93,7 +94,7 @@ jobs:
     - name: 运行执行脚本 Run a multi-line script - build_and_push_image
       if: ${{ github.event.inputs.what_to_do == 'build_and_push_image' }}
       run: |
-        export ENV_CI_DOCKERIMAGE_THISTAG="${GITHUB_RUN_NUMBER}"
+        export ENV_CI_DOCKERIMAGE_THISTAG="$(date +'%y%m%d')-${GITHUB_RUN_NUMBER}"
         ./run-docker-build-publish.sh
       env:
         ENV_CI_DOCKER_USERNAME: "${{ github.actor }}"

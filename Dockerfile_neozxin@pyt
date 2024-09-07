@@ -3,5 +3,4 @@ FROM python:3.10.13 as stage-0
 WORKDIR /src
 
 RUN apt update
-RUN apt install -y git make yasm as31 nasm binutils
 RUN pip install datasets torchinfo transformers sentencepiece seqeval sacrebleu bert-score bertviz

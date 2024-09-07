@@ -6,8 +6,8 @@ name: 持续集成CI
 on:
   # push:
   #   branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  # pull_request:
+  #   branches: [ master ]
   workflow_dispatch:
     inputs:
       what_to_do:
@@ -65,7 +65,7 @@ jobs:
         echo "[$(date)]: ${ENV_CI_TARGET_DOCKER_IMAGE}" > "${ENV_CI_DIST_DIR}/${ENV_CI_DIST_FILENAME}".txt
         ls "${ENV_CI_DIST_DIR}"
       env:
-        ENV_CI_DIST_FILENAME: "$(echo "$ENV_CI_TARGET_DOCKER_IMAGE" | sed -e 's/\//~/g' -e 's/:/@/g')"
+        ENV_CI_DIST_FILENAME: "$(echo $ENV_CI_TARGET_DOCKER_IMAGE | sed -e 's/\//~/g' -e 's/:/@/g')"
 
     # Runs a set of commands using the runners shell
     - name: 运行执行脚本 Run a multi-line script - build_and_push_image

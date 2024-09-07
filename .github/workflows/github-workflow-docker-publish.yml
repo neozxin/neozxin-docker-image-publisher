@@ -18,9 +18,9 @@ on:
         - create_image_snapshot
       target_docker_image:
         description: |
-          Target docker image:
-          - image to save (create_image_snapshot, e.g. python:3.10)
-          - feature name (build_and_push_image, e.g. node12-ci)
+          Target docker image:<br/>
+          - image to save (create_image_snapshot, e.g. python:3.10)<br/>
+          - feature name (build_and_push_image, e.g. node12-ci)<br/>
         required: true
       target_docker_file:
         description: Dockerfile (build_and_push_image)
@@ -91,3 +91,5 @@ jobs:
       with:
         name: dist-artifact
         path: "${{ github.workspace }}"
+      run: |
+        ls -la "${{ github.workspace }}/${ENV_CI_DIST_DIR}"

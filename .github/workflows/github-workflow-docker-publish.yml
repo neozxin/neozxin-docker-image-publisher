@@ -52,8 +52,22 @@ jobs:
         echo "当前产出目录 (env.ENV_CI_DIST_DIR): ${ENV_CI_DIST_DIR}"
         echo "当前 inputs.what_to_do: ${ENV_CI_WHAT_TO_DO}"
         echo "当前 inputs.target_docker_image: ${ENV_CI_TARGET_DOCKER_IMAGE}"
-        df -h
-        rm -rf *
+        # Remove software and language runtimes we're not using https://github.com/actions/runner-images/issues/2840#issuecomment-2272410832
+        sudo rm -rf \
+          "$AGENT_TOOLSDIRECTORY" \
+          /opt/google/chrome \
+          /opt/microsoft/msedge \
+          /opt/microsoft/powershell \
+          /opt/pipx \
+          /usr/lib/mono \
+          /usr/local/julia* \
+          /usr/local/lib/android \
+          /usr/local/lib/node_modules \
+          /usr/local/share/chromium \
+          /usr/local/share/powershell \
+          /usr/share/dotnet \
+          /usr/share/swift
+        df -h /
 
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: 代码获取 Checkout code

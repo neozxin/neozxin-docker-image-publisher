@@ -60,7 +60,7 @@ jobs:
     - name: 运行执行脚本 Run a multi-line script - create_image_snapshot
       if: ${{ github.event.inputs.what_to_do == 'create_image_snapshot' }}
       run: |
-        export ENV_CI_DIST_FILENAME="$(echo "${ENV_CI_TARGET_DOCKER_IMAGE}" | sed -e 's/\//~/g' -e 's/:/@/g')"
+        export ENV_CI_DIST_FILENAME="dockerimg_$(echo "${ENV_CI_TARGET_DOCKER_IMAGE}" | sed -e 's/\//~/g' -e 's/:/@/g')_$(date +"%Y-%m-%dT%H-%M-%S%z")"
         docker pull "${ENV_CI_TARGET_DOCKER_IMAGE}"
         docker save "${ENV_CI_TARGET_DOCKER_IMAGE}" | gzip > "${ENV_CI_DIST_DIR}/${ENV_CI_DIST_FILENAME}.tar.gz"
         echo "[$(date)]: ${ENV_CI_TARGET_DOCKER_IMAGE}" > "${ENV_CI_DIST_DIR}/${ENV_CI_DIST_FILENAME}".txt
@@ -85,4 +85,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: dist-artifact
-        path: "${{ github.workspace }}/${ENV_CI_DIST_DIR}"
+        path: "${{ github.workspace }}"

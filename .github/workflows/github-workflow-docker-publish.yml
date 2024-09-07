@@ -18,9 +18,9 @@ on:
         - create_image_snapshot
       target_docker_image:
         description: |
-          Target docker image:<br/>
-          - image to save (create_image_snapshot, e.g. python:3.10)<br/>
-          - feature name (build_and_push_image, e.g. node12-ci)<br/>
+          Target docker image:
+          - image to save (create_image_snapshot, e.g. python:3.10)
+          - feature name (build_and_push_image, e.g. node12-ci)
         required: true
       target_docker_file:
         description: Dockerfile (build_and_push_image)
@@ -55,7 +55,9 @@ jobs:
 
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: 代码获取 Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.repository }}
 
     # Runs a set of commands using the runners shell
     - name: 准备脚本环境 Init running environment
@@ -87,9 +89,7 @@ jobs:
 
     # Upload artifacts
     - name: 上传产出包 Upload artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: dist-artifact
         path: "${{ github.workspace }}"
-      run: |
-        ls -la "${{ github.workspace }}/${ENV_CI_DIST_DIR}"

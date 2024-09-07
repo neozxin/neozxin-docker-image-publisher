@@ -24,13 +24,13 @@ run__DockerBuildPublish() {
     # get parameters ready
     [ -z "${ENV_CI_DOCKER_USERNAME}" ] && local ENV_CI_DOCKER_USERNAME="$2"  # "${{ github.actor }}"
     [ -z "${ENV_CI_DOCKER_TOKEN}" ] && local ENV_CI_DOCKER_TOKEN="$3"  # "${{ secrets.DOCKERHUB_TOKEN }}"
-    [ -z "${ENV_CI_DOCKERIMAGE_THISTAG}" ] && local ENV_CI_DOCKERIMAGE_THISTAG="$4"  # "$GITHUB_RUN_NUMBER"
+    [ -z "${ENV_CI_DOCKERIMAGE_THISTAG}" ] && local ENV_CI_DOCKERIMAGE_THISTAG="$4"  # "${GITHUB_RUN_NUMBER}"
     [ -z "${ENV_CI_DOCKERIMAGE_FEATURENAME}" ] && local ENV_CI_DOCKERIMAGE_FEATURENAME="$5"  # e.g. "node12-ci", "dev-gate-server"
     [ -z "${ENV_CI_DOCKERIMAGE_REPOURL}" ] && local ENV_CI_DOCKERIMAGE_REPOURL="$6"  # e.g. "https://github.com/neozxin/neozxin-docker-image-publisher.git"
     [ -z "${ENV_CI_DOCKERIMAGE_REPOYML}" ] && local ENV_CI_DOCKERIMAGE_REPOYML="$7"  # e.g. "./dev-servers/docker-compose.yml"
     [ -z "${ENV_CI_DIST_DIR}" ] && local ENV_CI_DIST_DIR="$8"  # e.g. "dist-artifact"
     local var_dockerimage_name="${ENV_CI_DOCKER_USERNAME}/${ENV_CI_DOCKERIMAGE_FEATURENAME}"
-    local var_dockerimage_name_thistag="${var_dockerimage_name}:$ENV_CI_DOCKERIMAGE_THISTAG"
+    local var_dockerimage_name_thistag="${var_dockerimage_name}:${ENV_CI_DOCKERIMAGE_THISTAG}"
     local var_dockerimage_name_latest="${var_dockerimage_name}:latest"
 
     # init project directories

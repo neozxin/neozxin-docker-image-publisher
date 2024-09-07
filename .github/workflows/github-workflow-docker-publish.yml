@@ -60,12 +60,11 @@ jobs:
     - name: 运行执行脚本 Run a multi-line script - create_image_snapshot
       if: ${{ github.event.inputs.what_to_do == 'create_image_snapshot' }}
       run: |
+        export ENV_CI_DIST_FILENAME="$(echo "${ENV_CI_TARGET_DOCKER_IMAGE}" | sed -e 's/\//~/g' -e 's/:/@/g')"
         docker pull "${ENV_CI_TARGET_DOCKER_IMAGE}"
         docker save "${ENV_CI_TARGET_DOCKER_IMAGE}" | gzip > "${ENV_CI_DIST_DIR}/${ENV_CI_DIST_FILENAME}.tar.gz"
         echo "[$(date)]: ${ENV_CI_TARGET_DOCKER_IMAGE}" > "${ENV_CI_DIST_DIR}/${ENV_CI_DIST_FILENAME}".txt
         ls "${ENV_CI_DIST_DIR}"
-      env:
-        ENV_CI_DIST_FILENAME: "$(echo $ENV_CI_TARGET_DOCKER_IMAGE | sed -e 's/\//~/g' -e 's/:/@/g')"
 
     # Runs a set of commands using the runners shell
     - name: 运行执行脚本 Run a multi-line script - build_and_push_image

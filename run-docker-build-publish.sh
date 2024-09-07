@@ -45,9 +45,11 @@ run__DockerBuildPublish() {
         --tag "${var_dockerimage_name_thistag}" || break
     fi
 
-    echo "标记为最新镜像 Docker Image: ${var_dockerimage_name_latest}"
+    echo "标记为最新镜像 + 保存为文件: ${var_dockerimage_name_latest}"
     sudo docker tag "${var_dockerimage_name_thistag}" \
       "${var_dockerimage_name_latest}" || break
+    local var_dockerimage_savename="dockerimg_$(echo "${var_dockerimage_name_thistag}" | sed -e 's/\//~/g' -e 's/:/@/g')_$(date +'%Y-%m-%dT%H-%M-%S%z')"
+    sudo docker save "${var_dockerimage_name_thistag}" | gzip > "${ENV_CI_DIST_DIR}/${var_dockerimage_savename}.tar.gz" || break
 
     echo "即将发布 Docker Image: ${var_dockerimage_name_thistag}"
     # echo "${ENV_CI_DOCKER_TOKEN}" | sudo docker login -u "${ENV_CI_DOCKER_USERNAME}" --password-stdin || break
@@ -55,9 +57,6 @@ run__DockerBuildPublish() {
     sudo docker push "${var_dockerimage_name_thistag}" || break
     sudo docker push "${var_dockerimage_name_latest}" || break
     sudo docker logout || break
-    local var_dockerimage_savename="dockerimg_$(echo "${var_dockerimage_name_thistag}" | sed -e 's/\//~/g' -e 's/:/@/g')_$(date +'%Y-%m-%dT%H-%M-%S%z')"
-    # sudo docker save "${var_dockerimage_name_thistag}" | gzip > "${ENV_CI_DIST_DIR}/${var_dockerimage_savename}.tar.gz" || break
-    sudo docker save "${var_dockerimage_name_thistag}" > "${ENV_CI_DIST_DIR}/${var_dockerimage_savename}.tar" || break
 
     echo "已顺利发布 Docker Image: ${var_dockerimage_name_thistag}"
     return

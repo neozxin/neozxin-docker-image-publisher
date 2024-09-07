@@ -83,4 +83,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: dist-artifact
-        path: "${{ github.workspace }}/${ENV_CI_DIST_DIR}"
+        path: "${{ github.workspace }}"

@@ -23,17 +23,17 @@ on:
       # environment:
       #   type: environment
 
+# Environment variables declared for use
+env:
+  ENV_CI_WHAT_TO_DO: "${{ github.event.inputs.what_to_do }}"
+  ENV_CI_TARGET_DOCKER_IMAGE: "${{ github.event.inputs.target_docker_image }}"
+  ENV_CI_DIST_DIR: "dist-artifact"
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   Job-Build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
-    # Environment variables added to the job
-    env:
-      ENV_CI_WHAT_TO_DO: "${{ github.event.inputs.what_to_do }}"
-      ENV_CI_TARGET_DOCKER_IMAGE: "${{ github.event.inputs.target_docker_image }}"
-      ENV_CI_DIST_DIR: "dist-artifact"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -41,8 +41,9 @@ jobs:
       run: |
         echo "当前 Build ID (env.GITHUB_RUN_ID): ${GITHUB_RUN_ID}"
         echo "当前 Build Number (env.GITHUB_RUN_NUMBER): ${GITHUB_RUN_NUMBER}"
-        echo "当前目录 (env.GITHUB_WORKSPACE): ${GITHUB_WORKSPACE}"
-        echo "当前目录 (env.ENV_CI_DIST_DIR): ${ENV_CI_DIST_DIR}"
+        echo "当前 Workspace (env.GITHUB_WORKSPACE): ${GITHUB_WORKSPACE}"
+        echo "当前工作目录 (env.PWD): ${PWD}"
+        echo "当前产出目录 (env.ENV_CI_DIST_DIR): ${ENV_CI_DIST_DIR}"
         echo "当前 inputs.what_to_do: ${ENV_CI_WHAT_TO_DO}"
         echo "当前 inputs.target_docker_image: ${ENV_CI_TARGET_DOCKER_IMAGE}"
 

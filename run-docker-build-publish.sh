@@ -8,7 +8,6 @@ printArgs() {
 run__DockerBuildPublish() {
   printf -- "\n[$(date) @ X] Info: 执行构建与发布 Docker Image Build & Publish - Run\n"
   local var_common_scriptdir="$(cd "$(dirname "$0")" && pwd)"
-  local var_main_dist_dirname="neozxin-dist-docker-images"
   while true; do
     set -x
     cd "${var_common_scriptdir}"
@@ -22,46 +21,45 @@ run__DockerBuildPublish() {
       && docker version 2>/dev/null
     } || break
 
-    # init project directories
-    mkdir -p "${var_main_dist_dirname}" || break
-
+    # get parameters ready
     [ -z "${ENV_CI_DOCKER_USERNAME}" ] && local ENV_CI_DOCKER_USERNAME="$2"  # "${{ github.actor }}"
     [ -z "${ENV_CI_DOCKER_TOKEN}" ] && local ENV_CI_DOCKER_TOKEN="$3"  # "${{ secrets.DOCKERHUB_TOKEN }}"
     [ -z "${ENV_CI_DOCKERIMAGE_THISTAG}" ] && local ENV_CI_DOCKERIMAGE_THISTAG="$4"  # "$GITHUB_RUN_NUMBER"
     [ -z "${ENV_CI_DOCKERIMAGE_FEATURENAME}" ] && local ENV_CI_DOCKERIMAGE_FEATURENAME="$5"  # e.g. "node12-ci", "dev-gate-server"
     [ -z "${ENV_CI_DOCKERIMAGE_REPOURL}" ] && local ENV_CI_DOCKERIMAGE_REPOURL="$6"  # e.g. "https://github.com/neozxin/neozxin-docker-image-publisher.git"
     [ -z "${ENV_CI_DOCKERIMAGE_REPOYML}" ] && local ENV_CI_DOCKERIMAGE_REPOYML="$7"  # e.g. "./dev-servers/docker-compose.yml"
+    [ -z "${ENV_CI_DIST_DIR}" ] && local ENV_CI_DIST_DIR="$8"  # e.g. "dist-artifact"
+    local var_dockerimage_name="${ENV_CI_DOCKER_USERNAME}/${ENV_CI_DOCKERIMAGE_FEATURENAME}"
+    local var_dockerimage_name_thistag="${var_dockerimage_name}:$ENV_CI_DOCKERIMAGE_THISTAG"
+    local var_dockerimage_name_latest="${var_dockerimage_name}:latest"
 
-    local var_dockerimage_featurename="${ENV_CI_DOCKERIMAGE_FEATURENAME}"
-    local var_dockerimage_imagename="${ENV_CI_DOCKER_USERNAME}/${var_dockerimage_featurename}"
-    local var_dockerimage_filebasename="dockerimg@${ENV_CI_DOCKER_USERNAME}@${var_dockerimage_featurename}"
+    # init project directories
+    mkdir -p "${ENV_CI_DIST_DIR}" || break
 
-    echo "本地构建 Docker Image: ${var_dockerimage_featurename}"
+    echo "本地构建 Docker Image: ${var_dockerimage_name_thistag}"
     if [ -n "${ENV_CI_DOCKERIMAGE_REPOURL}" ]; then
       local var_localrepopath=".${ENV_CI_DOCKERIMAGE_THISTAG}-$(basename "${ENV_CI_DOCKERIMAGE_REPOURL}")"
       git clone "${ENV_CI_DOCKERIMAGE_REPOURL}" "${var_localrepopath}" || break
       sudo env ENV_DOCKERC_TAG="${ENV_CI_DOCKERIMAGE_THISTAG}" docker-compose -f "${var_localrepopath}/${ENV_CI_DOCKERIMAGE_REPOYML}" build || break
     else
-      sudo docker build . --file "Dockerfile_${ENV_CI_DOCKER_USERNAME}@${var_dockerimage_featurename}" \
-        --tag "${var_dockerimage_imagename}:$ENV_CI_DOCKERIMAGE_THISTAG" || break
+      sudo docker build . --file "Dockerfile_${ENV_CI_DOCKER_USERNAME}@${ENV_CI_DOCKERIMAGE_FEATURENAME}" \
+        --tag "${var_dockerimage_name_thistag}" || break
     fi
 
-    sudo docker tag "${var_dockerimage_imagename}:$ENV_CI_DOCKERIMAGE_THISTAG" \
-      "${var_dockerimage_imagename}:latest" || break
+    echo "标记为最新镜像 Docker Image: ${var_dockerimage_name_latest}"
+    sudo docker tag "${var_dockerimage_name_thistag}" \
+      "${var_dockerimage_name_latest}" || break
 
-    echo "即将发布 Docker Image: ${var_dockerimage_imagename}:$ENV_CI_DOCKERIMAGE_THISTAG"
+    echo "即将发布 Docker Image: ${var_dockerimage_name_thistag}"
     # echo "${ENV_CI_DOCKER_TOKEN}" | sudo docker login -u "${ENV_CI_DOCKER_USERNAME}" --password-stdin || break
     sudo docker login -u "${ENV_CI_DOCKER_USERNAME}" -p "${ENV_CI_DOCKER_TOKEN}" || break
-    
-    sudo docker push "${var_dockerimage_imagename}:$ENV_CI_DOCKERIMAGE_THISTAG" || break
-    sudo docker push "${var_dockerimage_imagename}:latest" || break
-    
+    sudo docker push "${var_dockerimage_name_thistag}" || break
+    sudo docker push "${var_dockerimage_name_latest}" || break
     sudo docker logout || break
-    # sudo docker images
-    sudo docker save "${var_dockerimage_imagename}:$ENV_CI_DOCKERIMAGE_THISTAG" \
-      > "${var_main_dist_dirname}/${var_dockerimage_filebasename}@$ENV_CI_DOCKERIMAGE_THISTAG.tar" || break
+    # sudo docker save "${var_dockerimage_name_thistag}" | gzip > "${ENV_CI_DIST_DIR}/dockerimg@${var_dockerimage_name_thistag}.tar.gz" || break
+    sudo docker save "${var_dockerimage_name_thistag}" > "${ENV_CI_DIST_DIR}/dockerimg@${var_dockerimage_name_thistag}.tar" || break
 
-    echo "已顺利发布 Docker Image: ${var_dockerimage_imagename}:$ENV_CI_DOCKERIMAGE_THISTAG"
+    echo "已顺利发布 Docker Image: ${var_dockerimage_name_thistag}"
     return
   done
   return 1

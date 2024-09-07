@@ -29,9 +29,8 @@ run__DockerBuildPublish() {
     [ -z "${ENV_CI_DOCKERIMAGE_REPOURL}" ] && local ENV_CI_DOCKERIMAGE_REPOURL="$6"  # e.g. "https://github.com/neozxin/neozxin-docker-image-publisher.git"
     [ -z "${ENV_CI_DOCKERIMAGE_REPOYML}" ] && local ENV_CI_DOCKERIMAGE_REPOYML="$7"  # e.g. "./dev-servers/docker-compose.yml"
     [ -z "${ENV_CI_DIST_DIR}" ] && local ENV_CI_DIST_DIR="$8"  # e.g. "dist-artifact"
-    local var_dockerimage_name="${ENV_CI_DOCKER_USERNAME}/${ENV_CI_DOCKERIMAGE_FEATURENAME}"
-    local var_dockerimage_name_thistag="${var_dockerimage_name}:${ENV_CI_DOCKERIMAGE_THISTAG}"
-    local var_dockerimage_name_latest="${var_dockerimage_name}:latest"
+    local var_dockerimage_name_thistag="${ENV_CI_DOCKER_USERNAME}/${ENV_CI_DOCKERIMAGE_FEATURENAME}:${ENV_CI_DOCKERIMAGE_THISTAG}"
+    local var_dockerimage_name_latest="${ENV_CI_DOCKER_USERNAME}/${ENV_CI_DOCKERIMAGE_FEATURENAME}:latest"
 
     # init project directories
     mkdir -p "${ENV_CI_DIST_DIR}" || break
@@ -56,8 +55,9 @@ run__DockerBuildPublish() {
     sudo docker push "${var_dockerimage_name_thistag}" || break
     sudo docker push "${var_dockerimage_name_latest}" || break
     sudo docker logout || break
-    # sudo docker save "${var_dockerimage_name_thistag}" | gzip > "${ENV_CI_DIST_DIR}/dockerimg@${var_dockerimage_name_thistag}.tar.gz" || break
-    sudo docker save "${var_dockerimage_name_thistag}" > "${ENV_CI_DIST_DIR}/dockerimg@${var_dockerimage_name_thistag}.tar" || break
+    local var_dockerimage_savename="dockerimg_$(echo "${var_dockerimage_name_thistag}" | sed -e 's/\//~/g' -e 's/:/@/g')_$(date +'%Y-%m-%dT%H-%M-%S%z')"
+    # sudo docker save "${var_dockerimage_name_thistag}" | gzip > "${ENV_CI_DIST_DIR}/${var_dockerimage_savename}.tar.gz" || break
+    sudo docker save "${var_dockerimage_name_thistag}" > "${ENV_CI_DIST_DIR}/${var_dockerimage_savename}.tar" || break
 
     echo "已顺利发布 Docker Image: ${var_dockerimage_name_thistag}"
     return

@@ -107,7 +107,7 @@ jobs:
     - name: 上传产出包 Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: "Uploaded: ${{ env.ENV_CI_ARTIFACT_PATH }}"
+        name: "${{ env.ENV_CI_ARTIFACT_PATH }}"
         path: "${{ env.ENV_CI_ARTIFACT_PATH }}"
       env:
         ENV_CI_ARTIFACT_PATH: "${{ github.workspace }}/${{ env.ENV_CI_DIST_DIR }}"

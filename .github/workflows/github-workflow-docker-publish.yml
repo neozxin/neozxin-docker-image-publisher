@@ -53,16 +53,16 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: 准备脚本环境 Init running environment
       run: |
-        mkdir -p "$ENV_CI_DIST_DIR"
+        mkdir -p "${ENV_CI_DIST_DIR}"
 
     # Runs a set of commands using the runners shell
     - name: 运行执行脚本 Run a multi-line script - create_image_snapshot
       if: ${{ github.event.inputs.what_to_do == 'create_image_snapshot' }}
       run: |
-        docker pull "$ENV_CI_TARGET_DOCKER_IMAGE"
-        docker save "$ENV_CI_TARGET_DOCKER_IMAGE" | gzip > "$ENV_CI_DIST_DIR/$ENV_CI_TARGET_DOCKER_IMAGE.tar.gz"
-        echo "[$(date)]: $ENV_CI_TARGET_DOCKER_IMAGE" > "$ENV_CI_DIST_DIR/$ENV_CI_TARGET_DOCKER_IMAGE".txt
-        ls "$ENV_CI_DIST_DIR"
+        docker pull "${ENV_CI_TARGET_DOCKER_IMAGE}"
+        docker save "${ENV_CI_TARGET_DOCKER_IMAGE}" | gzip > "${ENV_CI_DIST_DIR}/${ENV_CI_TARGET_DOCKER_IMAGE}.tar.gz"
+        echo "[$(date)]: ${ENV_CI_TARGET_DOCKER_IMAGE}" > "${ENV_CI_DIST_DIR}/${ENV_CI_TARGET_DOCKER_IMAGE}".txt
+        ls "${ENV_CI_DIST_DIR}"
 
     # Runs a set of commands using the runners shell
     - name: 运行执行脚本 Run a multi-line script - build_and_push_image
@@ -70,10 +70,10 @@ jobs:
       run: |
         ./run-docker-build-publish.sh
       env:
-        ENV_CI_DOCKER_USERNAME: ${{ github.actor }}
-        ENV_CI_DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-        ENV_CI_DOCKERIMAGE_THISTAG: $GITHUB_RUN_NUMBER
-        ENV_CI_DOCKERIMAGE_FEATURENAME: $ENV_CI_TARGET_DOCKER_IMAGE
+        ENV_CI_DOCKER_USERNAME: "${{ github.actor }}"
+        ENV_CI_DOCKER_TOKEN: "${{ secrets.DOCKERHUB_TOKEN }}"
+        ENV_CI_DOCKERIMAGE_THISTAG: "${GITHUB_RUN_NUMBER}"
+        ENV_CI_DOCKERIMAGE_FEATURENAME: "${ENV_CI_TARGET_DOCKER_IMAGE}"
         ENV_CI_DOCKERIMAGE_REPOURL: ""
         ENV_CI_DOCKERIMAGE_REPOYML: ""
 
@@ -82,4 +82,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: dist-artifact
-        path: "${{ github.workspace }}/$ENV_CI_DIST_DIR"
+        path: "${{ github.workspace }}/${ENV_CI_DIST_DIR}"

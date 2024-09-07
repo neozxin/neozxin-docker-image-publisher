@@ -17,6 +17,10 @@ on:
         - build_and_push_image
         - create_image_snapshot
       target_docker_image:
+        description: Target docker image - image to save (create_image_snapshot, e.g. python:3.10), feature name (build_and_push_image, e.g. node12-ci)
+        required: true
+      target_docker_file:
+        description: Dockerfile (build_and_push_image)
         required: true
       # upload-artifact:
       #   type: boolean
@@ -60,10 +64,9 @@ jobs:
     - name: 运行执行脚本 Run a multi-line script - create_image_snapshot
       if: ${{ github.event.inputs.what_to_do == 'create_image_snapshot' }}
       run: |
-        export ENV_CI_DIST_FILENAME="dockerimg_$(echo "${ENV_CI_TARGET_DOCKER_IMAGE}" | sed -e 's/\//~/g' -e 's/:/@/g')_$(date +"%Y-%m-%dT%H-%M-%S%z")"
+        export ENV_CI_TARGET_DOCKER_IMAGE_SAVENAME="dockerimg_$(echo "${ENV_CI_TARGET_DOCKER_IMAGE}" | sed -e 's/\//~/g' -e 's/:/@/g')_$(date +'%Y-%m-%dT%H-%M-%S%z')"
         docker pull "${ENV_CI_TARGET_DOCKER_IMAGE}"
-        docker save "${ENV_CI_TARGET_DOCKER_IMAGE}" | gzip > "${ENV_CI_DIST_DIR}/${ENV_CI_DIST_FILENAME}.tar.gz"
-        echo "[$(date)]: ${ENV_CI_TARGET_DOCKER_IMAGE}" > "${ENV_CI_DIST_DIR}/${ENV_CI_DIST_FILENAME}".txt
+        docker save "${ENV_CI_TARGET_DOCKER_IMAGE}" | gzip > "${ENV_CI_DIST_DIR}/${ENV_CI_TARGET_DOCKER_IMAGE_SAVENAME}.tar.gz"
         ls -la "${ENV_CI_DIST_DIR}"
         ls -la "${{ github.workspace }}/${ENV_CI_DIST_DIR}"
 

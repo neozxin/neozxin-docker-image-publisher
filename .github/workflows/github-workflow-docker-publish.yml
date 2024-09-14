@@ -83,6 +83,8 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: 准备脚本环境 Init running environment
       run: |
+        export ENV_CI_UID="$(id -u)"
+        export ENV_CI_GID="$(id -g)"
         mkdir -p "${ENV_CI_DIST_DIR}"
         ls -la
 

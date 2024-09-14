@@ -24,6 +24,6 @@ services:
       pip download -r ./requirements.txt -d ./pkgs"
     volumes:
       - type: bind
-        source: "${ENV_CI_DIST_DIR}"
+        source: "${ENV_CI_ARTIFACT_PATH}"
         target: /src
         read_only: false

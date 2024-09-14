@@ -99,10 +99,12 @@ jobs:
     - name: 运行执行脚本 Run a multi-line script - docker_compose_snapshot
       if: ${{ github.event.inputs.what_to_do == 'docker_compose_snapshot' }}
       run: |
-        mkdir -p "${ENV_CI_DIST_DIR}"
+        mkdir -p "${ENV_CI_ARTIFACT_PATH}"
         docker-compose -f "${ENV_CI_TARGET_DOCKER_COMPOSE_YML}" up
         docker-compose -f "${ENV_CI_TARGET_DOCKER_COMPOSE_YML}" down
-        ls -la "${ENV_CI_DIST_DIR}"
+        ls -la "${ENV_CI_ARTIFACT_PATH}"
+      env:
+        ENV_CI_ARTIFACT_PATH: "${{ github.workspace }}/${{ env.ENV_CI_DIST_DIR }}"
 
     # Runs a set of commands using the runners shell
     - name: 运行执行脚本 Run a multi-line script - build_and_push_image

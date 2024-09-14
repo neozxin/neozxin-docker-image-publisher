@@ -102,7 +102,7 @@ jobs:
       if: ${{ github.event.inputs.what_to_do == 'docker_compose_snapshot' }}
       uses: hoverkraft-tech/compose-action@v2.0.1
       with:
-        compose-file: "${ENV_CI_TARGET_DOCKER_COMPOSE_YML}"
+        compose-file: "${{ env.ENV_CI_TARGET_DOCKER_COMPOSE_YML }}"
       # run: |
       #   docker-compose -f "${ENV_CI_TARGET_DOCKER_COMPOSE_YML}" up
       #   docker-compose -f "${ENV_CI_TARGET_DOCKER_COMPOSE_YML}" down

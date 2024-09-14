@@ -21,7 +21,8 @@ services:
       seqeval==1.2.2
       torchinfo==1.8.0
       EOF
-      pip download -r ./requirements.txt -d ./pkgs"
+      pip download -r ./requirements.txt -d ./pkgs
+      tar -zcf pkgs.tar.gz ./pkgs && rm -rf ./pkgs"
     volumes:
       - type: bind
         source: "${ENV_CI_ARTIFACT_PATH}"

@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  main:
+    image: python:3.10.12
+    user: "1000:1000"
+    working_dir: /src
+    command: |
+      /bin/sh -c "cat > ./requirements.txt << EOF
+      # pip dependencies tested in python:3.10.12
+      torch==2.4.1
+      # llm
+      datasets==3.0.0
+      scipy==1.13.1
+      transformers==4.44.2
+      # metrics
+      bert-score==0.3.13
+      bertviz==1.4.0
+      sacrebleu==2.4.3
+      sentencepiece==0.2.0
+      seqeval==1.2.2
+      torchinfo==1.8.0
+      EOF
+      pip download -r ./requirements.txt -d ./pkgs"
+    volumes:
+      - type: bind
+        source: "${ENV_CI_DIST_DIR}"
+        target: /src
+        read_only: false

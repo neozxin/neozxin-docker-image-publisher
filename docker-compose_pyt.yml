@@ -3,7 +3,7 @@ version: '3.8'
 services:
   main:
     image: python:3.10.12
-    user: "1000:1000"
+    user: "${ENV_CI_UID}:${ENV_CI_GID}"
     working_dir: /src
     command: |
       /bin/sh -c "cat > ./requirements.txt << EOF

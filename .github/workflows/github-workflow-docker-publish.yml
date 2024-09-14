@@ -16,6 +16,7 @@ on:
         options:
         - build_and_push_image
         - create_image_snapshot
+        - docker_compose_snapshot
       target_docker_image:
         description: |
           Target docker image:
@@ -24,6 +25,8 @@ on:
         required: true
       target_docker_file:
         description: Dockerfile (build_and_push_image)
+      target_docker_compose_yml:
+        description: path of docker-compose.yml (docker_compose_snapshot)
       # upload-artifact:
       #   type: boolean
       # environment:
@@ -39,6 +42,7 @@ jobs:
     env:
       ENV_CI_WHAT_TO_DO: "${{ github.event.inputs.what_to_do }}"
       ENV_CI_TARGET_DOCKER_IMAGE: "${{ github.event.inputs.target_docker_image }}"
+      ENV_CI_TARGET_DOCKER_COMPOSE_YML: "${{ github.event.inputs.target_docker_compose_yml }}"
       ENV_CI_DIST_DIR: "dist-artifact"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
@@ -88,6 +92,15 @@ jobs:
         export ENV_CI_TARGET_DOCKER_IMAGE_SAVENAME="dockerimg_$(echo "${ENV_CI_TARGET_DOCKER_IMAGE}" | sed -e 's/\//~/g' -e 's/:/@/g')_$(date +'%Y-%m-%dT%H-%M-%S%z')"
         docker pull "${ENV_CI_TARGET_DOCKER_IMAGE}"
         docker save "${ENV_CI_TARGET_DOCKER_IMAGE}" | gzip > "${ENV_CI_DIST_DIR}/${ENV_CI_TARGET_DOCKER_IMAGE_SAVENAME}.tar.gz"
+        ls -la "${ENV_CI_DIST_DIR}"
+
+    # Runs a set of commands using the runners shell
+    - name: 运行执行脚本 Run a multi-line script - docker_compose_snapshot
+      if: ${{ github.event.inputs.what_to_do == 'docker_compose_snapshot' }}
+      run: |
+        mkdir -p "${ENV_CI_DIST_DIR}"
+        docker-compose -f "${ENV_CI_TARGET_DOCKER_COMPOSE_YML}" up
+        docker-compose -f "${ENV_CI_TARGET_DOCKER_COMPOSE_YML}" down
         ls -la "${ENV_CI_DIST_DIR}"
 
     # Runs a set of commands using the runners shell

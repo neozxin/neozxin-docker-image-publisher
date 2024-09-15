@@ -1,12 +1,29 @@
-version: '3.8'
+name: x_pyt_store_llm_pip
 
 services:
-  main:
+  python_llm_store:
     image: python:3.10.12
     user: "${ENV_CI_UID}:${ENV_CI_GID}"
-    working_dir: /src
-    command: |
-      /bin/sh -c "cat > ./requirements.txt << EOF
+    working_dir: "/src"
+    command: "./llm_store_pip.sh"
+    configs:
+      - source: python_llm_store_pip_sh
+        target: "/src/llm_store_pip.sh"
+        mode: 0777
+      - source: python_llm_requirements_txt
+        target: "/src/llm_requirements.txt"
+    volumes:
+      - type: bind
+        source: "${ENV_CI_ARTIFACT_PATH}"
+        target: "/src/dist"
+        read_only: false
+      # - type: volume
+      #   source: vol-artifact
+      #   target: "/src/dist"
+
+configs:
+  python_llm_requirements_txt:
+    content: |
       # pip dependencies tested in python:3.10.12
       torch==2.4.1
       # llm
@@ -20,11 +37,14 @@ services:
       sentencepiece==0.2.0
       seqeval==1.2.2
       torchinfo==1.8.0
-      EOF
-      pip download -r ./requirements.txt -d ./pkgs
-      tar -zcf pkgs.tar.gz ./pkgs && rm -rf ./pkgs"
-    volumes:
-      - type: bind
-        source: "${ENV_CI_ARTIFACT_PATH}"
-        target: /src
-        read_only: false
+  python_llm_store_pip_sh:
+    content: |
+      #!/bin/sh
+      set -x
+      rm -rf ./dist/*
+      mkdir -p ./dist/ref-src && cp ./* ./dist/ref-src/
+      pip download -r ./llm_requirements.txt -d ./dist/pkgs
+      # tar -zcf pkgs.tar.gz ./dist/pkgs && rm -rf ./dist/pkgs
+
+# volumes:
+#   vol-artifact:

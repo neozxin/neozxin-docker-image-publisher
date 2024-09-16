@@ -1,25 +1,15 @@
 name: x_pyt_store_llm_pip
 
-services:
-  python_llm_store:
-    image: python:3.10.12
-    user: "${ENV_CI_UID}:${ENV_CI_GID}"
-    working_dir: "/src"
-    command: "./llm_store_pip.sh"
-    configs:
-      - source: python_llm_store_pip_sh
-        target: "/src/llm_store_pip.sh"
-        mode: 0777
-      - source: python_llm_requirements_txt
-        target: "/src/llm_requirements.txt"
-    volumes:
-      - type: bind
-        source: "${ENV_CI_ARTIFACT_PATH}"
-        target: "/src/dist"
-        read_only: false
-      # - type: volume
-      #   source: vol-artifact
-      #   target: "/src/dist"
+x-user: &user "${ENV_CI_UID}:${ENV_CI_GID}"
+x-host_share_path: &host_share_path "${ENV_CI_ARTIFACT_PATH}"
+x-python_llm_store_pip_sh: &python_llm_store_pip_sh |
+  set -x
+  rm -rf ./dist/*
+  cat > ./dist/llm_requirements.txt << EOF
+  datasets==3.0.0
+  transformers==4.44.2
+  EOF
+  pip download -r ./dist/llm_requirements.txt -d ./dist/pkgs
 
 configs:
   python_llm_requirements_txt:
@@ -42,9 +32,34 @@ configs:
       #!/bin/sh
       set -x
       rm -rf ./dist/*
-      mkdir -p ./dist/ref-src && cp ./* ./dist/ref-src/
-      pip download -r ./llm_requirements.txt -d ./dist/pkgs
+      cp ./* ./dist/
+      pip download -r ./dist/llm_requirements.txt -d ./dist/pkgs
       # tar -zcf pkgs.tar.gz ./dist/pkgs && rm -rf ./dist/pkgs
 
 # volumes:
 #   vol-artifact:
+
+services:
+  python_llm_store:
+    image: python:3.10.12
+    user: *user
+    working_dir: "/src"
+    command:
+      - "/bin/sh"
+      - "-c"
+      - *python_llm_store_pip_sh
+    # command: "./llm_store_pip.sh"
+    # configs:
+    #   - source: python_llm_store_pip_sh
+    #     target: "/src/llm_store_pip.sh"
+    #     mode: 0777
+    #   - source: python_llm_requirements_txt
+    #     target: "/src/llm_requirements.txt"
+    volumes:
+      - type: bind
+        source: *host_share_path
+        target: "/src/dist"
+        read_only: false
+      # - type: volume
+      #   source: vol-artifact
+      #   target: "/src/dist"

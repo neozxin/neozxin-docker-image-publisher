@@ -44,17 +44,17 @@ services:
     image: python:3.10.12
     user: *user
     working_dir: "/src"
-    entrypoint:
-      - "/bin/sh"
-      - "-c"
-      - *python_llm_store_pip_sh
-    # entrypoint: "./llm_store_pip.sh"
-    # configs:
-    #   - source: python_llm_store_pip_sh
-    #     target: "/src/llm_store_pip.sh"
-    #     mode: 0777
-    #   - source: python_llm_requirements_txt
-    #     target: "/src/llm_requirements.txt"
+    # entrypoint:
+    #   - "/bin/sh"
+    #   - "-c"
+    #   - *python_llm_store_pip_sh
+    entrypoint: "./llm_store_pip.sh"
+    configs:
+      - source: python_llm_store_pip_sh
+        target: "/src/llm_store_pip.sh"
+        mode: 0777
+      - source: python_llm_requirements_txt
+        target: "/src/llm_requirements.txt"
     volumes:
       - type: bind
         source: *host_share_path

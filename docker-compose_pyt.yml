@@ -44,11 +44,11 @@ services:
     image: python:3.10.12
     user: *user
     working_dir: "/src"
-    command:
+    entrypoint:
       - "/bin/sh"
       - "-c"
       - *python_llm_store_pip_sh
-    # command: "./llm_store_pip.sh"
+    # entrypoint: "./llm_store_pip.sh"
     # configs:
     #   - source: python_llm_store_pip_sh
     #     target: "/src/llm_store_pip.sh"

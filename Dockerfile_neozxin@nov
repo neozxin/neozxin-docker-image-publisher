@@ -1,0 +1,9 @@
+FROM ubuntu:20
+
+WORKDIR /src
+USER user
+
+RUN wget https://github.com/kasmtech/KasmVNC/releases/download/v1.3.1/kasmvncserver_$(lsb_release -cs)_1.3.1_amd64.deb
+RUN sudo apt update
+RUN sudo apt install -y fluxbox xterm ./kasmvncserver_$(lsb_release -cs)_1.3.1_amd64.deb
+RUN sudo adduser user ssl-cert

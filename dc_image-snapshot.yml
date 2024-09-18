@@ -1,0 +1,29 @@
+name: x_docker_image_snapshot
+
+x-host_share_path: &host_share_path "${ENV_CI_ARTIFACT_PATH}"
+
+configs:
+  pull_to_snapshot_images_sh:
+    content: |
+      ENV_CONTAINER_DIST_PATH="/src/dist"
+      for docker_image in ${ENV_CI_TARGET_DOCKER_IMAGE}
+      do
+        ENV_CONTAINER_IMAGE_SAVENAME="dockerimg_$(echo "${docker_image}" | sed -e 's/\//~/g' -e 's/:/@/g')_$(date +'%Y-%m-%dT%H-%M-%S%z')"
+        docker pull "${docker_image}"
+        docker save "${docker_image}" | gzip > "${ENV_CONTAINER_DIST_PATH}/${ENV_CONTAINER_IMAGE_SAVENAME}.tar.gz"
+      done
+      ls -la "${ENV_CONTAINER_DIST_PATH}"
+
+services:
+  main:
+    image: docker:latest
+    entrypoint: "/pull_to_snapshot_images.sh"
+    configs:
+      - source: pull_to_snapshot_images_sh
+        target: "/pull_to_snapshot_images.sh"
+        mode: 0777
+    volumes:
+      - type: bind
+        source: *host_share_path
+        target: "/src/dist"
+        read_only: false

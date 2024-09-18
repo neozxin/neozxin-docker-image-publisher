@@ -11,5 +11,8 @@ WORKDIR /src
 RUN apt update
 RUN apt install -y fluxbox xterm ./kasmvncserver_$(. /etc/os-release && echo "$VERSION_CODENAME")_1.3.1_amd64.deb
 
-USER user
-RUN sudo adduser user ssl-cert
+RUN groupadd -g 1234 customgroup && \
+    useradd -m -u 1234 -g customgroup customuser
+RUN adduser customuser ssl-cert
+
+USER customuser

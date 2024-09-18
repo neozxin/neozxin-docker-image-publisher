@@ -20,11 +20,14 @@ services:
   main:
     image: docker:latest
     entrypoint: "/pull_to_snapshot_images.sh"
+    environment:
+      - ENV_CI_TARGET_DOCKER_IMAGE: "${ENV_CI_TARGET_DOCKER_IMAGE}"
     configs:
       - source: pull_to_snapshot_images_sh
         target: "/pull_to_snapshot_images.sh"
         mode: 0777
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - type: bind
         source: *host_share_path
         target: "/src/dist"

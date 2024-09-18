@@ -1,4 +1,4 @@
-FROM ubuntu:20
+FROM ubuntu
 
 WORKDIR /src
 USER user

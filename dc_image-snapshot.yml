@@ -7,10 +7,10 @@ configs:
     content: |
       #!/bin/sh
       set -x
-      ENV_CONTAINER_DIST_PATH="/src/dist"
+      export ENV_CONTAINER_DIST_PATH="/src/dist"
       for docker_image in ${ENV_CI_TARGET_DOCKER_IMAGE}
       do
-        ENV_CONTAINER_IMAGE_SAVENAME="dockerimg_$(echo "${docker_image}" | sed -e 's/\//~/g' -e 's/:/@/g')_$(date +'%Y-%m-%dT%H-%M-%S%z')"
+        export ENV_CONTAINER_IMAGE_SAVENAME="dockerimg_$(echo "${docker_image}" | sed -e 's/\//~/g' -e 's/:/@/g')_$(date +'%Y-%m-%dT%H-%M-%S%z')"
         docker pull "${docker_image}"
         docker save "${docker_image}" | gzip > "${ENV_CONTAINER_DIST_PATH}/${ENV_CONTAINER_IMAGE_SAVENAME}.tar.gz"
       done

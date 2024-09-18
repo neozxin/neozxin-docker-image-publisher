@@ -92,10 +92,19 @@ jobs:
     - name: 运行执行脚本 Run a multi-line script - create_image_snapshot
       if: ${{ github.event.inputs.what_to_do == 'create_image_snapshot' }}
       run: |
-        export ENV_CI_TARGET_DOCKER_IMAGE_SAVENAME="dockerimg_$(echo "${ENV_CI_TARGET_DOCKER_IMAGE}" | sed -e 's/\//~/g' -e 's/:/@/g')_$(date +'%Y-%m-%dT%H-%M-%S%z')"
-        docker pull "${ENV_CI_TARGET_DOCKER_IMAGE}"
-        docker save "${ENV_CI_TARGET_DOCKER_IMAGE}" | gzip > "${ENV_CI_DIST_DIR}/${ENV_CI_TARGET_DOCKER_IMAGE_SAVENAME}.tar.gz"
+        # export ENV_CI_TARGET_DOCKER_IMAGE_SAVENAME="dockerimg_$(echo "${ENV_CI_TARGET_DOCKER_IMAGE}" | sed -e 's/\//~/g' -e 's/:/@/g')_$(date +'%Y-%m-%dT%H-%M-%S%z')"
+        # docker pull "${ENV_CI_TARGET_DOCKER_IMAGE}"
+        # docker save "${ENV_CI_TARGET_DOCKER_IMAGE}" | gzip > "${ENV_CI_DIST_DIR}/${ENV_CI_TARGET_DOCKER_IMAGE_SAVENAME}.tar.gz"
+        # ls -la "${ENV_CI_DIST_DIR}"
+        for docker_image in ${ENV_CI_TARGET_DOCKER_IMAGE}
+        do
+          export ENV_CONTAINER_IMAGE_SAVENAME="dockerimg_$(echo "${docker_image}" | sed -e 's/\//~/g' -e 's/:/@/g')_$(date +'%Y-%m-%dT%H-%M-%S%z')"
+          docker pull "${docker_image}"
+          docker save "${docker_image}" | gzip > "${ENV_CI_DIST_DIR}/${ENV_CONTAINER_IMAGE_SAVENAME}.tar.gz"
+        done
         ls -la "${ENV_CI_DIST_DIR}"
+
+
 
     # Runs a set of commands using the runners shell
     - name: 运行执行脚本 Run a multi-line script - docker_compose_snapshot

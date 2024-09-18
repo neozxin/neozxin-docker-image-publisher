@@ -1,9 +1,9 @@
 FROM busybox as stage-0_download
 WORKDIR /downloads
-RUN wget https://github.com/kasmtech/KasmVNC/releases/download/v1.3.1/kasmvncserver_$(. /etc/os-release && echo "$VERSION_CODENAME")_1.3.1_amd64.deb
+RUN wget https://github.com/kasmtech/KasmVNC/releases/download/v1.3.1/kasmvncserver_focal_1.3.1_amd64.deb
 
 
-FROM ubuntu
+FROM ubuntu:20.04
 COPY --from=stage-0_download /downloads /src
 
 WORKDIR /src

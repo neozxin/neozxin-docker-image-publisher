@@ -5,6 +5,8 @@ x-host_share_path: &host_share_path "${ENV_CI_ARTIFACT_PATH}"
 configs:
   pull_to_snapshot_images_sh:
     content: |
+      #!/bin/sh
+      set -x
       ENV_CONTAINER_DIST_PATH="/src/dist"
       for docker_image in ${ENV_CI_TARGET_DOCKER_IMAGE}
       do

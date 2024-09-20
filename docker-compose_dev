@@ -8,37 +8,31 @@ x-fso_service_common: &fso_service_common
     - "$PWD/x-host-share:/x-container-share"
 
 configs:
-  fso_dev_gateway_nginx_conf:
+  fso_dev_gateway_nginx_default_conf:
     content: |
       server {
         listen 80;
-        # Redirect all requests matching /proxy/xxx to https://myapi.com/xxx
         location ^~ /portainer/ {
-          # Strip "/proxy" from the URI and proxy the rest
-          rewrite ^/proxy/(.*)$ /$1 break;
-          proxy_pass http://fso_portainer;
-          proxy_set_header Host $$host;
-          proxy_set_header X-Real-IP $$remote_addr;
-          proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Proto $$scheme;
+          rewrite ^/portainer/(.*)$ /$1 break;
+          proxy_pass http://fso_portainer:9000;
+          include conf.d/proxy_sets.confpart;
         }
         location ^~ /proxy/ {
-          # Strip "/proxy" from the URI and proxy the rest
-          rewrite ^/proxy/(.*)$ /$1 break;
+          rewrite ^/proxy/(.*)$ /$1 break;  # Strip "/proxy" from the URI and proxy the rest
           proxy_pass http://fso_dev_api;
-          proxy_set_header Host $$host;
-          proxy_set_header X-Real-IP $$remote_addr;
-          proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Proto $$scheme;
+          include conf.d/proxy_sets.confpart;
         }
         location / {
           proxy_pass http://fso_dev_local;
-          proxy_set_header Host $$host;
-          proxy_set_header X-Real-IP $$remote_addr;
-          proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Proto $$scheme;
+          include conf.d/proxy_sets.confpart;
         }
       }
+  fso_dev_gateway_nginx_proxy_sets_confpart:
+    content: |
+      proxy_set_header Host $$host;
+      proxy_set_header X-Real-IP $$remote_addr;
+      proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $$scheme;
 
 services:
   fso_dev_gateway:
@@ -47,8 +41,10 @@ services:
     ports:
       - "80:80"
     configs:
-      - source: fso_dev_gateway_nginx_conf
+      - source: fso_dev_gateway_nginx_default_conf
         target: "/etc/nginx/conf.d/default.conf"
+      - source: fso_dev_gateway_nginx_proxy_sets_confpart
+        target: "/etc/nginx/conf.d/proxy_sets.confpart"
     volumes:
       - "$PWD/x-host-share:/x-container-share"
   fso_dev_local:
@@ -66,6 +62,8 @@ services:
   fso_portainer:
     <<: *fso_service_common
     image: portainer/portainer-ce:2.21.1
+    ports:
+      - "8444:9000"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "$PWD/x-host-share:/x-container-share"

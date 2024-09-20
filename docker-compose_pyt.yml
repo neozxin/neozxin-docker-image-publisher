@@ -1,15 +1,17 @@
+######## @required: ENV_CI_HOST_SHARE_PATH ########
 name: x_pyt_store_llm_pip
 
-x-user: &user "${ENV_CI_UID}:${ENV_CI_GID}"
-x-host_share_path: &host_share_path "${ENV_CI_ARTIFACT_PATH}"
-x-python_llm_store_pip_sh: &python_llm_store_pip_sh |
-  set -x
-  rm -rf ./dist/*
-  cat > ./dist/llm_requirements.txt << EOF
-  datasets==3.0.0
-  transformers==4.44.2
-  EOF
-  pip download -r ./dist/llm_requirements.txt -d ./dist/pkgs
+x-host_share_path: &host_share_path "${ENV_CI_HOST_SHARE_PATH:-./x-host-shares}"
+x-container_share_path: &container_share_path "/x-src/dist"
+x-user: &user "${ENV_CI_UID:-1000}:${ENV_CI_GID:-1000}"
+# x-python_llm_store_pip_sh: &python_llm_store_pip_sh |
+#   set -x
+#   rm -rf "$${ENV_CONTAINER_SHARE_PATH}"/*
+#   cat > "$${ENV_CONTAINER_SHARE_PATH}/llm_requirements.txt" << EOF
+#   datasets==3.0.0
+#   transformers==4.44.2
+#   EOF
+#   pip download -r "$${ENV_CONTAINER_SHARE_PATH}/llm_requirements.txt" -d "$${ENV_CONTAINER_SHARE_PATH}/pkgs"
 
 configs:
   python_llm_requirements_txt:
@@ -31,10 +33,9 @@ configs:
     content: |
       #!/bin/sh
       set -x
-      rm -rf ./dist/*
-      cp ./* ./dist/
-      pip download -r ./dist/llm_requirements.txt -d ./dist/pkgs
-      # tar -zcf pkgs.tar.gz ./dist/pkgs && rm -rf ./dist/pkgs
+      rm -rf "$${ENV_CONTAINER_SHARE_PATH}"/*
+      cp ./* "$${ENV_CONTAINER_SHARE_PATH}"/
+      pip download -r "$${ENV_CONTAINER_SHARE_PATH}/llm_requirements.txt" -d "$${ENV_CONTAINER_SHARE_PATH}/pkgs"
 
 # volumes:
 #   vol-artifact:
@@ -43,23 +44,26 @@ services:
   python_llm_store:
     image: python:3.10.12
     user: *user
-    working_dir: "/src"
+    working_dir: "/x-src"
     # entrypoint:
     #   - "/bin/sh"
     #   - "-c"
     #   - *python_llm_store_pip_sh
     entrypoint: "./llm_store_pip.sh"
+    environment:
+      ENV_CONTAINER_SHARE_PATH: *container_share_path
     configs:
       - source: python_llm_store_pip_sh
-        target: "/src/llm_store_pip.sh"
+        target: "/x-src/llm_store_pip.sh"
         mode: 0777
       - source: python_llm_requirements_txt
-        target: "/src/llm_requirements.txt"
+        target: "/x-src/llm_requirements.txt"
     volumes:
       - type: bind
+        # bind:
+        #   create_host_path: true
         source: *host_share_path
-        target: "/src/dist"
-        read_only: false
+        target: *container_share_path
       # - type: volume
       #   source: vol-artifact
-      #   target: "/src/dist"
+      #   target: "/x-src/dist"

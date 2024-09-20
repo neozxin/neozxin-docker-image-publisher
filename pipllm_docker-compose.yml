@@ -4,14 +4,14 @@ name: x_python_llm_store
 x-host_share_path: &host_share_path "${ENV_CI_HOST_SHARE_PATH:-./x-host-shares}"
 x-container_share_path: &container_share_path "/x-src/dist"
 x-user: &user "${ENV_CI_UID}:${ENV_CI_GID}"
-x-python_llm_store_pip_sh: &python_llm_store_pip_sh |
-  set -x
-  rm -rf "$${ENV_CONTAINER_SHARE_PATH}"/*
-  cat > "$${ENV_CONTAINER_SHARE_PATH}/llm_requirements.txt" << EOF
-  datasets==3.0.0
-  transformers==4.44.2
-  EOF
-  pip download -r "$${ENV_CONTAINER_SHARE_PATH}/llm_requirements.txt" -d "$${ENV_CONTAINER_SHARE_PATH}/pkgs"
+# x-python_llm_store_pip_sh: &python_llm_store_pip_sh |
+#   set -x
+#   rm -rf "$${ENV_CONTAINER_SHARE_PATH}"/*
+#   cat > "$${ENV_CONTAINER_SHARE_PATH}/llm_requirements.txt" << EOF
+#   datasets==3.0.0
+#   transformers==4.44.2
+#   EOF
+#   pip download -r "$${ENV_CONTAINER_SHARE_PATH}/llm_requirements.txt" -d "$${ENV_CONTAINER_SHARE_PATH}/pkgs"
 
 configs:
   python_llm_store_requirements_txt:
@@ -47,17 +47,17 @@ services:
     working_dir: "/x-src"
     environment:
       ENV_CONTAINER_SHARE_PATH: *container_share_path
-    entrypoint:
-      - "/bin/sh"
-      - "-c"
-      - *python_llm_store_pip_sh
-    # entrypoint: "./pip.sh"
-    # configs:
-    #   - source: python_llm_store_pip_sh
-    #     target: "/x-src/pip.sh"
-    #     mode: 0777
-    #   - source: python_llm_store_requirements_txt
-    #     target: "/x-src/requirements.txt"
+    # entrypoint:
+    #   - "/bin/sh"
+    #   - "-c"
+    #   - *python_llm_store_pip_sh
+    entrypoint: "./pip.sh"
+    configs:
+      - source: python_llm_store_pip_sh
+        target: "/x-src/pip.sh"
+        mode: 0777
+      - source: python_llm_store_requirements_txt
+        target: "/x-src/requirements.txt"
     volumes:
       - type: bind
         # bind:

@@ -1,0 +1,69 @@
+######## @required: ENV_CI_HOST_SHARE_PATH ########
+name: x_python_llm_store
+
+x-host_share_path: &host_share_path "${ENV_CI_HOST_SHARE_PATH:-./x-host-shares}"
+x-container_share_path: &container_share_path "/x-src/dist"
+x-user: &user "${ENV_CI_UID:-1000}:${ENV_CI_GID:-1000}"
+# x-python_llm_store_pip_sh: &python_llm_store_pip_sh |
+#   set -x
+#   rm -rf "$${ENV_CONTAINER_SHARE_PATH}"/*
+#   cat > "$${ENV_CONTAINER_SHARE_PATH}/llm_requirements.txt" << EOF
+#   datasets==3.0.0
+#   transformers==4.44.2
+#   EOF
+#   pip download -r "$${ENV_CONTAINER_SHARE_PATH}/llm_requirements.txt" -d "$${ENV_CONTAINER_SHARE_PATH}/pkgs"
+
+configs:
+  python_llm_store_requirements_txt:
+    content: |
+      # pip dependencies tested in python:3.10.12
+      torch==2.4.1
+      # llm
+      datasets==3.0.0
+      scipy==1.13.1
+      transformers==4.44.2
+      # metrics
+      bert-score==0.3.13
+      bertviz==1.4.0
+      sacrebleu==2.4.3
+      sentencepiece==0.2.0
+      seqeval==1.2.2
+      torchinfo==1.8.0
+  python_llm_store_pip_sh:
+    content: |
+      #!/bin/sh
+      set -x
+      rm -rf "$${ENV_CONTAINER_SHARE_PATH}"/*
+      cp ./* "$${ENV_CONTAINER_SHARE_PATH}"/
+      pip download -r "$${ENV_CONTAINER_SHARE_PATH}/requirements.txt" -d "$${ENV_CONTAINER_SHARE_PATH}/pkgs"
+
+# volumes:
+#   vol-artifact:
+
+services:
+  python_llm_store:
+    image: python:3.10.12
+    user: *user
+    working_dir: "/x-src"
+    # entrypoint:
+    #   - "/bin/sh"
+    #   - "-c"
+    #   - *python_llm_store_pip_sh
+    entrypoint: "./pip.sh"
+    environment:
+      ENV_CONTAINER_SHARE_PATH: *container_share_path
+    configs:
+      - source: python_llm_store_pip_sh
+        target: "/x-src/pip.sh"
+        mode: 0777
+      - source: python_llm_store_requirements_txt
+        target: "/x-src/requirements.txt"
+    volumes:
+      - type: bind
+        # bind:
+        #   create_host_path: true
+        source: *host_share_path
+        target: *container_share_path
+      # - type: volume
+      #   source: vol-artifact
+      #   target: "/x-src/dist"

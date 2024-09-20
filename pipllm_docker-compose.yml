@@ -3,7 +3,7 @@ name: x_python_llm_store
 
 x-host_share_path: &host_share_path "${ENV_CI_HOST_SHARE_PATH:-./x-host-shares}"
 x-container_share_path: &container_share_path "/x-src/dist"
-x-user: &user "${ENV_CI_UID:-1000}:${ENV_CI_GID:-1000}"
+x-user: &user "${ENV_CI_UID}:${ENV_CI_GID}"
 # x-python_llm_store_pip_sh: &python_llm_store_pip_sh |
 #   set -x
 #   rm -rf "$${ENV_CONTAINER_SHARE_PATH}"/*

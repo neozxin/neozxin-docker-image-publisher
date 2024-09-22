@@ -14,7 +14,7 @@ RUN apt install -y sudo fluxbox xterm ./kasmvncserver_$(. /etc/os-release && ech
 RUN groupadd -g 1234 xuser && \
     useradd -m -u 1234 -g xuser xuser
 # RUN adduser --disabled-password --gecos '' xuser
-# RUN adduser xuser sudo
+RUN adduser xuser sudo
 RUN adduser xuser ssl-cert
 
 WORKDIR /home/xuser

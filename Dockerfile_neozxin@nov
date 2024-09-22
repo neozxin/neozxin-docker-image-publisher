@@ -1,4 +1,4 @@
-FROM busybox as stage-0_download
+FROM busybox AS stage-0_download
 WORKDIR /downloads
 RUN wget https://github.com/kasmtech/KasmVNC/releases/download/v1.3.1/kasmvncserver_focal_1.3.1_amd64.deb
 
@@ -11,11 +11,11 @@ WORKDIR /src
 RUN apt update
 RUN apt install -y sudo fluxbox xterm ./kasmvncserver_$(. /etc/os-release && echo "$VERSION_CODENAME")_1.3.1_amd64.deb
 
-RUN groupadd -g 1234 xgroup && \
-    useradd -m -u 1234 -g xgroup xuser
+RUN groupadd -g 1234 xuser && \
+    useradd -m -u 1234 -g xuser xuser
+# RUN adduser --disabled-password --gecos '' xuser
+# RUN adduser xuser sudo
 RUN adduser xuser ssl-cert
-
-USER xuser
 
 WORKDIR /home/xuser
 
@@ -26,4 +26,7 @@ unset DBUS_SESSION_BUS_ADDRESS
 fluxbox
 EOF
 
-RUN chmod +x .vnc/xstartup
+RUN chmod 777 .vnc/xstartup
+RUN chown -R xuser .vnc
+
+USER xuser

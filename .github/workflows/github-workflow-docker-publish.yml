@@ -23,8 +23,6 @@ on:
           - image to save (create_image_snapshot, e.g. python:3.10)
           - feature name (build_and_push_image, e.g. node12-ci)
         # required: true
-      target_docker_file:
-        description: Dockerfile (build_and_push_image)
       target_docker_compose_yml:
         description: path of docker-compose.yml (docker_compose_snapshot)
       # upload-artifact:
@@ -120,7 +118,7 @@ jobs:
     - name: 上传产出包 Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: "dist-artifact(dir)"
+        name: "${{ env.ENV_CI_WHAT_TO_DO }}"
         path: "${{ env.ENV_CI_HOST_SHARE_PATH }}"
       env:
         ENV_CI_HOST_SHARE_PATH: "${{ github.workspace }}/${{ env.ENV_CI_DIST_DIR }}"

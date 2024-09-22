@@ -17,7 +17,7 @@ RUN adduser xuser ssl-cert
 
 USER xuser
 
-WORKDIR ~
+WORKDIR /home/xuser
 
 COPY <<EOF .vnc/xstartup
 #!/bin/sh
@@ -25,3 +25,5 @@ unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
 fluxbox
 EOF
+
+RUN chmod +x .vnc/xstartup

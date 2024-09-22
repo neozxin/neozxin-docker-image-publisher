@@ -9,10 +9,19 @@ COPY --from=stage-0_download /downloads /src
 WORKDIR /src
 
 RUN apt update
-RUN apt install -y fluxbox xterm ./kasmvncserver_$(. /etc/os-release && echo "$VERSION_CODENAME")_1.3.1_amd64.deb
+RUN apt install -y sudo fluxbox xterm ./kasmvncserver_$(. /etc/os-release && echo "$VERSION_CODENAME")_1.3.1_amd64.deb
 
-RUN groupadd -g 1234 customgroup && \
-    useradd -m -u 1234 -g customgroup customuser
-RUN adduser customuser ssl-cert
+RUN groupadd -g 1234 xgroup && \
+    useradd -m -u 1234 -g xgroup xuser
+RUN adduser xuser ssl-cert
 
-USER customuser
+USER xuser
+
+WORKDIR ~
+
+COPY <<EOF .vnc/xstartup
+#!/bin/sh
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
+fluxbox
+EOF

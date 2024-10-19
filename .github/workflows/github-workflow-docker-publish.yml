@@ -23,6 +23,12 @@ on:
           - image to save (create_image_snapshot, e.g. python:3.10)
           - feature name (build_and_push_image, e.g. node12-ci)
         # required: true
+      target_docker_image_arch:
+        type: choice
+        description: Target docker image os/arch (e.g. linux/amd64)
+        options:
+        - linux/amd64
+        - linux/arm64
       target_docker_compose_yml:
         description: path of docker-compose.yml (docker_compose_snapshot)
       # upload-artifact:
@@ -40,6 +46,7 @@ jobs:
     env:
       ENV_CI_WHAT_TO_DO: "${{ github.event.inputs.what_to_do }}"
       ENV_CI_TARGET_DOCKER_IMAGE: "${{ github.event.inputs.target_docker_image }}"
+      ENV_CI_TARGET_DOCKER_IMAGE_ARCH: "${{ github.event.inputs.target_docker_image_arch }}"
       ENV_CI_TARGET_DOCKER_COMPOSE_YML: "${{ github.event.inputs.target_docker_compose_yml }}"
       ENV_CI_DIST_DIR: "dist-artifact"
 
@@ -54,6 +61,7 @@ jobs:
         echo "当前产出目录 (env.ENV_CI_DIST_DIR): ${ENV_CI_DIST_DIR}"
         echo "当前 inputs.what_to_do: ${ENV_CI_WHAT_TO_DO}"
         echo "当前 inputs.target_docker_image: ${ENV_CI_TARGET_DOCKER_IMAGE}"
+        echo "当前 inputs.target_docker_image_arch: ${ENV_CI_TARGET_DOCKER_IMAGE_ARCH}"
         # Remove software and language runtimes we're not using https://github.com/actions/runner-images/issues/2840#issuecomment-2272410832
         sudo rm -rf \
           "$AGENT_TOOLSDIRECTORY" \

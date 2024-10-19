@@ -12,8 +12,8 @@ configs:
       set -x
       for docker_image in $${ENV_CI_TARGET_DOCKER_IMAGE}
       do
-        export ENV_CONTAINER_IMAGE_SAVENAME="dockerimg_$$(echo "$${docker_image}" | sed -e 's/\//~/g' -e 's/:/@/g')_$$(date +'%Y-%m-%dT%H-%M-%S%z')"
-        docker pull "$${docker_image}"
+        export ENV_CONTAINER_IMAGE_SAVENAME="dockerimg_$$(echo "$${docker_image}_$${ENV_CI_TARGET_DOCKER_IMAGE_ARCH}" | sed -e 's/\//~/g' -e 's/:/@/g')_$$(date +'%Y-%m-%dT%H-%M-%S%z')"
+        docker pull --platform "$${ENV_CI_TARGET_DOCKER_IMAGE_ARCH}" "$${docker_image}"
         docker save "$${docker_image}" | gzip > "$${ENV_CONTAINER_SHARE_PATH}/$${ENV_CONTAINER_IMAGE_SAVENAME}.tar.gz"
       done
       ls -la "$${ENV_CONTAINER_SHARE_PATH}"
@@ -25,6 +25,7 @@ services:
     entrypoint: "./entry.sh"
     environment:
       ENV_CI_TARGET_DOCKER_IMAGE: "${ENV_CI_TARGET_DOCKER_IMAGE}"
+      ENV_CI_TARGET_DOCKER_IMAGE_ARCH: "${ENV_CI_TARGET_DOCKER_IMAGE_ARCH}"
       ENV_CONTAINER_SHARE_PATH: *container_share_path
     configs:
       - source: pull_to_snapshot_entry_sh

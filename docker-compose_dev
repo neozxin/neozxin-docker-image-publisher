@@ -68,6 +68,22 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "$PWD/x-host-share:/x-container-share"
       - "$PWD/x-portainer-data:/data"
+  elasticsearch:
+    <<: *fso_service_common
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    ports:
+      - "9200:9200"
+    volumes:
+      - "$PWD/x-host-share:/x-container-share"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+    healthcheck:
+        test: curl --fail http://localhost:9200/_cat/health || exit 1
+        interval: 10s
+        timeout: 1s
+        retries: 10
 
 networks:
   fso_net_fe:

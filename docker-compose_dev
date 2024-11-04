@@ -1,33 +1,44 @@
-name: x_fso_dev_fe
+name: x_zx_dev
 
-x-fso_service_common: &fso_service_common
+x-zx_service_base: &zx_service_base
   restart: always
   networks:
-    - fso_net_fe
-  volumes:
-    - "$PWD/x-host-share:/x-container-share"
+    - zx_dev_net
+x-zx_volumes_from: &zx_volumes_from
+  volumes_from:
+    - zx_dev_gateway
 
 configs:
-  fso_dev_gateway_nginx_default_conf:
+  zx_dev_gateway_nginx_default_conf:
     content: |
       server {
         listen 80;
         location ^~ /portainer/ {
           rewrite ^/portainer/(.*)$ /$1 break;
-          proxy_pass http://fso_portainer:9000;
+          proxy_pass http://zx_portainer:9000;
+          include conf.d/proxy_sets.confpart;
+        }
+        location ^~ /rabbitmq/ {
+          rewrite ^/rabbitmq/(.*)$ /$1 break;
+          proxy_pass http://zx_dev_rabbitmq:15672;
+          include conf.d/proxy_sets.confpart;
+        }
+        location ^~ /elasticsearch/ {
+          rewrite ^/elasticsearch/(.*)$ /$1 break;
+          proxy_pass http://zx_dev_elasticsearch:9200;
           include conf.d/proxy_sets.confpart;
         }
         location ^~ /proxy/ {
           rewrite ^/proxy/(.*)$ /$1 break;  # Strip "/proxy" from the URI and proxy the rest
-          proxy_pass http://fso_dev_api;
+          proxy_pass http://zx_dev_api;
           include conf.d/proxy_sets.confpart;
         }
         location / {
-          proxy_pass http://fso_dev_local;
+          proxy_pass http://zx_dev_local;
           include conf.d/proxy_sets.confpart;
         }
       }
-  fso_dev_gateway_nginx_proxy_sets_confpart:
+  zx_dev_gateway_nginx_proxy_sets_confpart:
     content: |
       proxy_set_header Host $$host;
       proxy_set_header X-Real-IP $$remote_addr;
@@ -35,55 +46,67 @@ configs:
       proxy_set_header X-Forwarded-Proto $$scheme;
 
 services:
-  fso_dev_gateway:
-    <<: *fso_service_common
+  zx_dev_gateway:
+    <<: *zx_service_base
     image: nginx:1.27.1
     ports:
       - "80:80"
     configs:
-      - source: fso_dev_gateway_nginx_default_conf
+      - source: zx_dev_gateway_nginx_default_conf
         target: "/etc/nginx/conf.d/default.conf"
-      - source: fso_dev_gateway_nginx_proxy_sets_confpart
+      - source: zx_dev_gateway_nginx_proxy_sets_confpart
         target: "/etc/nginx/conf.d/proxy_sets.confpart"
     volumes:
       - "$PWD/x-host-share:/x-container-share"
-  fso_dev_local:
-    <<: *fso_service_common
-    image: nginx:1.27.1
-    volumes:
-      - "$PWD/x-host-share:/x-container-share"
-      - "$PWD/local-server-mock:/usr/share/nginx/html"
-  fso_dev_api:
-    <<: *fso_service_common
-    image: nginx:1.27.1
-    volumes:
-      - "$PWD/x-host-share:/x-container-share"
-      - "$PWD/api-server-mock/:/usr/share/nginx/html"
-  fso_portainer:
-    <<: *fso_service_common
+  zx_portainer:
+    <<: [*zx_service_base, *zx_volumes_from]
     image: portainer/portainer-ce:2.21.1
     ports:
-      - "8444:9000"
+      - "9000:9000"
+      - "8000:8000"
+      - "9443:9443"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "$PWD/x-host-share:/x-container-share"
       - "$PWD/x-portainer-data:/data"
-  elasticsearch:
-    <<: *fso_service_common
+  zx_dev_local:
+    <<: [*zx_service_base, *zx_volumes_from]
+    image: nginx:1.27.1
+    volumes:
+      - "$PWD/local-server-mock:/usr/share/nginx/html"
+  zx_dev_api:
+    <<: [*zx_service_base, *zx_volumes_from]
+    image: nginx:1.27.1
+    volumes:
+      - "$PWD/api-server-mock/:/usr/share/nginx/html"
+  zx_dev_elasticsearch:
+    <<: [*zx_service_base, *zx_volumes_from]
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
     ports:
       - "9200:9200"
-    volumes:
-      - "$PWD/x-host-share:/x-container-share"
+      - "9300:9300"
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
     healthcheck:
-        test: curl --fail http://localhost:9200/_cat/health || exit 1
-        interval: 10s
-        timeout: 1s
-        retries: 10
+      test: curl --fail http://localhost:9200/_cat/health || exit 1
+      interval: 10s
+      timeout: 1s
+      retries: 10
+  zx_dev_rabbitmq:
+    <<: [*zx_service_base, *zx_volumes_from]
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+  zx_dev_redis:
+    <<: [*zx_service_base, *zx_volumes_from]
+    image: redis:7
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - "$PWD/zx_dev_redis/data:/data"
 
 networks:
-  fso_net_fe:
+  zx_dev_net:

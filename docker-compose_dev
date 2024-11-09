@@ -63,7 +63,7 @@ services:
     <<: [*zx_service_base, *zx_volumes_from]
     image: portainer/portainer-ce:2.21.1
     ports:
-      - "9000:9000"
+      # - "9000:9000"
       - "8000:8000"
       - "9443:9443"
     volumes:
@@ -98,6 +98,27 @@ services:
       interval: 10s
       timeout: 1s
       retries: 10
+  zx_dev_mongo:
+    <<: [*zx_service_base, *zx_volumes_from]
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    volumes:
+      - "$PWD/x-host-share/zx_dev_mongo/data/db:/data/db"
+  zx_dev_adminer:
+    <<: [*zx_service_base, *zx_volumes_from]
+    image: adminer
+    ports:
+      - "38080:8080"
+  zx_dev_anaconda3:
+    <<: [*zx_service_base, *zx_volumes_from]
+    image: continuumio/anaconda3
+    ports:
+      - "8888:8888"
+    volumes:
+      - "$PWD/x-host-share/zx_dev_anaconda3/opt/notebooks/v-shares:/opt/notebooks/v-shares"
+    working_dir: "/opt/notebooks"
+    command: /bin/bash -c "/opt/conda/bin/conda install jupyter -y --quiet && /opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks --ip='*' --port=8888 --no-browser --allow-root"
   zx_dev_local:
     <<: [*zx_service_base, *zx_volumes_from]
     image: nginx:1.27.1
@@ -108,6 +129,74 @@ services:
     image: nginx:1.27.1
     volumes:
       - "$PWD/x-host-share/zx_dev_api/html:/usr/share/nginx/html"
+
+  # zx_tool_qbittorrent:  # https://zerodog.top/index.php/archives/28/
+  #   <<: [*zx_service_base, *zx_volumes_from]
+  #   image: linuxserver/qbittorrent
+  #   ports:
+  #     - "38181:8181"
+  #     - "36881:6881"
+  #     - "36881:6881/udp"
+  #   volumes:
+  #     - "$PWD/x-host-share/zx_tool_qbittorrent/config:/config"
+  #     - "$PWD/x-host-share/zx_tool_qbittorrent/downloads:/downloads"
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Asia/Shanghai
+  #     - UMASK_SET=022
+  #     - WEBUI_PORT=8181
+  # zx_tool_baidunetdisk:  # https://wulu.zone/posts/baidunetdeck-arm-docker
+  #   <<: [*zx_service_base, *zx_volumes_from]
+  #   image: emuqi/baidunetdisk-arm64-vnc
+  #   ports:
+  #     - "35800:5800"
+  #     - "35900:5900"
+  #   volumes:
+  #     - "$PWD/x-host-share/zx_tool_baidunetdisk/config:/config"
+  # zx_tool_ollama:
+  #   <<: [*zx_service_base, *zx_volumes_from]
+  #   image: ollama/ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - "$PWD/x-host-share/zx_tool_ollama/root/.ollama:/root/.ollama"
+  # zx_tool_ollama_web:
+  #   <<: [*zx_service_base, *zx_volumes_from]
+  #   image: ghcr.io/open-webui/open-webui:ollama
+  #   ports:
+  #     - "38081:8080"
+  #   volumes:
+  #     - "$PWD/x-host-share/zx_tool_ollama_web/root/.ollama:/root/.ollama"
+  #     - "$PWD/x-host-share/zx_tool_ollama_web/app/backend/data:/app/backend/data"
+  #   environment:
+  #     - WEBUI_AUTH=False
+  # zx_tool_firefox:
+  #   <<: [*zx_service_base, *zx_volumes_from]
+  #   image: lscr.io/linuxserver/firefox
+  #   ports:
+  #     - "33000:3000"
+  #     - "33001:3001"
+  #   volumes:
+  #     - "$PWD/x-host-share/zx_tool_firefox/config:/config"
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Asia/Shanghai
+  #   $ docker run -d \
+  #     --name=firefox \
+  #     --security-opt seccomp=unconfined `#optional` \
+  #     -e PUID=1000 \
+  #     -e PGID=1000 \
+  #     -e TZ=Etc/UTC \
+  #     -e FIREFOX_CLI=https://www.linuxserver.io/ `#optional` \
+  #     -p 3000:3000 \
+  #     -p 3001:3001 \
+  #     -v="${PWD}/v-shares__firefox":"/config" \
+  #     --shm-size="1gb" \
+  #     --add-host=host.docker.internal:host-gateway \
+  #     --restart=unless-stopped \
+  #     lscr.io/linuxserver/firefox:latest
 
 networks:
   zx_dev_net:

@@ -16,6 +16,7 @@ configs:
         location ^~ /portainer/ {
           rewrite ^/portainer/(.*)$ /$1 break;
           proxy_pass http://zx_portainer:9000;
+          proxy_redirect / $$scheme://$$host$$request_uri;  # replace "/" with "/portainer/" in "Location" and "Refresh" header fields
           include conf.d/proxy_sets.confpart;
         }
         location ^~ /rabbitmq/ {
@@ -67,17 +68,21 @@ services:
       - "9443:9443"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "$PWD/x-portainer-data:/data"
-  zx_dev_local:
+      - "$PWD/x-host-share/zx_portainer/data:/data"
+  zx_dev_redis:
     <<: [*zx_service_base, *zx_volumes_from]
-    image: nginx:1.27.1
+    image: redis:7
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
     volumes:
-      - "$PWD/local-server-mock:/usr/share/nginx/html"
-  zx_dev_api:
+      - "$PWD/x-host-share/zx_dev_redis/data:/data"
+  zx_dev_rabbitmq:
     <<: [*zx_service_base, *zx_volumes_from]
-    image: nginx:1.27.1
-    volumes:
-      - "$PWD/api-server-mock/:/usr/share/nginx/html"
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
   zx_dev_elasticsearch:
     <<: [*zx_service_base, *zx_volumes_from]
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
@@ -93,20 +98,16 @@ services:
       interval: 10s
       timeout: 1s
       retries: 10
-  zx_dev_rabbitmq:
+  zx_dev_local:
     <<: [*zx_service_base, *zx_volumes_from]
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-  zx_dev_redis:
-    <<: [*zx_service_base, *zx_volumes_from]
-    image: redis:7
-    ports:
-      - "6379:6379"
-    command: redis-server --save 60 1 --loglevel warning
+    image: nginx:1.27.1
     volumes:
-      - "$PWD/zx_dev_redis/data:/data"
+      - "$PWD/x-host-share/zx_dev_local/html:/usr/share/nginx/html"
+  zx_dev_api:
+    <<: [*zx_service_base, *zx_volumes_from]
+    image: nginx:1.27.1
+    volumes:
+      - "$PWD/x-host-share/zx_dev_api/html:/usr/share/nginx/html"
 
 networks:
   zx_dev_net:

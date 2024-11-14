@@ -4,19 +4,59 @@ x-zx_service_base: &zx_service_base
   restart: always
   networks:
     - zx_dev_net
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+    - "zx-host:host-gateway"
+# x-zx_volume_x_host_share: &zx_volume_x_host_share
+#   - "$PWD/x-host-share:/x-container-share"
+# x-zx_volume_docker_sock: &zx_volume_docker_sock
+#   - "/var/run/docker.sock:/var/run/docker.sock"
 x-zx_volumes_from: &zx_volumes_from
   volumes_from:
-    - zx_dev_gateway
+    - zx__gateway
+x-zx_profiles_man: &zx_profiles_man
+  profiles: ["man", "dev", "tool", "all"]
+x-zx_profiles_dev: &zx_profiles_dev
+  profiles: ["dev", "all"]
+x-zx_profiles_tool: &zx_profiles_tool
+  profiles: ["tool", "all"]
 
 configs:
-  zx_dev_gateway_nginx_default_conf:
+  zx__gateway_nginx_default_conf:
     content: |
       server {
         listen 80;
-        location ^~ /portainer/ {
+        set $$xorigin "$$scheme://$$http_host";
+        # if (($$scheme = http && $$server_port = 80) || ($$scheme = https && $$server_port = 443)) {
+        #   set $$origin $$scheme://$$host;
+        # }
+        location ~ ^/portainer(?:(/.*)|$) {
+          if ($$request_uri = "/portainer") {
+            return 301 /portainer/;
+          }
           rewrite ^/portainer/(.*)$ /$1 break;
-          proxy_pass http://zx_portainer:9000;
-          proxy_redirect / $$scheme://$$host$$request_uri;  # replace "/" with "/portainer/" in "Location" and "Refresh" header fields
+          proxy_pass http://zx__portainer:9000;
+          proxy_redirect / $$xorigin$$request_uri;  # replace "/" with "/portainer/" in "Location" and "Refresh" header fields
+          include conf.d/proxy_sets.confpart;
+        }
+        location ~ ^/webtop(?:(/.*)|$) {
+          if ($$request_uri = "/webtop") {
+            return 301 /webtop/;
+          }
+          rewrite ^/webtop/(.*)$ /$1 break;
+          proxy_pass http://zx__webtop:3000;
+          # try for fix: https://github.com/linuxserver/docker-swag/blob/master/root/defaults/nginx/proxy.conf.sample
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $$http_upgrade;
+          proxy_set_header Connection "upgrade";
+          include conf.d/proxy_sets.confpart;
+        }
+        location ~ ^/telegraf(?:(/.*)|$) {
+          if ($$request_uri = "/telegraf") {
+            return 301 /telegraf/;
+          }
+          rewrite ^/telegraf/(.*)$ /$1 break;
+          proxy_pass http://zx_dev_telegraf:9273;
           include conf.d/proxy_sets.confpart;
         }
         location ^~ /rabbitmq/ {
@@ -39,28 +79,47 @@ configs:
           include conf.d/proxy_sets.confpart;
         }
       }
-  zx_dev_gateway_nginx_proxy_sets_confpart:
+  zx__gateway_nginx_proxy_sets_confpart:
     content: |
-      proxy_set_header Host $$host;
+      proxy_set_header Host $$http_host;
       proxy_set_header X-Real-IP $$remote_addr;
       proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
       proxy_set_header X-Forwarded-Proto $$scheme;
+  zx_dev_telegraf_conf:
+    content: |
+      [agent]
+      # https://docs.influxdata.com/telegraf/v1.16/administration/configuration/#agent-configuration
+      interval = "30s"
+      flush_interval = "10s"
+
+      [[inputs.ping]]
+      # https://github.com/influxdata/telegraf/blob/master/plugins/inputs/ping/README.md
+      urls = ["github.com", "amazon.com"]
+      method = "exec"
+      count = 3
+
+      [[outputs.prometheus_client]]
+      # https://github.com/influxdata/telegraf/blob/master/plugins/outputs/prometheus_client/README.md
+      ## Address to listen on.
+      listen = ":9273"
+      metric_version = 2
 
 services:
-  zx_dev_gateway:
-    <<: *zx_service_base
+  zx__gateway:
+    <<: [*zx_service_base, *zx_profiles_man]
     image: nginx:1.27.1
     ports:
       - "80:80"
-    configs:
-      - source: zx_dev_gateway_nginx_default_conf
-        target: "/etc/nginx/conf.d/default.conf"
-      - source: zx_dev_gateway_nginx_proxy_sets_confpart
-        target: "/etc/nginx/conf.d/proxy_sets.confpart"
     volumes:
       - "$PWD/x-host-share:/x-container-share"
-  zx_portainer:
-    <<: [*zx_service_base, *zx_volumes_from]
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    configs:
+      - source: zx__gateway_nginx_default_conf
+        target: "/etc/nginx/conf.d/default.conf"
+      - source: zx__gateway_nginx_proxy_sets_confpart
+        target: "/etc/nginx/conf.d/proxy_sets.confpart"
+  zx__portainer:
+    <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_man]
     image: portainer/portainer-ce:2.21.1
     ports:
       # - "9000:9000"
@@ -68,27 +127,58 @@ services:
       - "9443:9443"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "$PWD/x-host-share/zx_portainer/data:/data"
+      - "$PWD/x-host-share/zx__portainer/data:/data"
+  zx__webtop:
+    <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_man]
+    image: linuxserver/webtop:latest
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - "$PWD/x-host-share/zx__webtop/config:/config"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - SUBFOLDER=/ #optional
+      - TITLE=Webtop #optional
+    security_opt:
+      - seccomp:unconfined #optional
+    devices:
+      - /dev/dri:/dev/dri #optional
+    shm_size: "1gb" #optional
+  zx_dev_telegraf:
+    <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_dev]
+    image: telegraf:1.16.0
+    ports:
+      - "9273:9273"
+    # volumes:
+    configs:
+      - source: zx_dev_telegraf_conf
+        target: "/etc/telegraf/telegraf.conf"
+    command: telegraf --config /etc/telegraf/telegraf.conf
   zx_dev_redis:
-    <<: [*zx_service_base, *zx_volumes_from]
+    <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_dev]
     image: redis:7
     ports:
       - "6379:6379"
-    command: redis-server --save 60 1 --loglevel warning
     volumes:
       - "$PWD/x-host-share/zx_dev_redis/data:/data"
+    command: redis-server --save 60 1 --loglevel warning
   zx_dev_rabbitmq:
-    <<: [*zx_service_base, *zx_volumes_from]
+    <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_dev]
     image: rabbitmq:3-management
     ports:
       - "5672:5672"
       - "15672:15672"
+    # volumes:
   zx_dev_elasticsearch:
-    <<: [*zx_service_base, *zx_volumes_from]
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_dev]
+    image: elasticsearch:8.15.3
     ports:
       - "9200:9200"
       - "9300:9300"
+    # volumes:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -99,44 +189,99 @@ services:
       timeout: 1s
       retries: 10
   zx_dev_mongo:
-    <<: [*zx_service_base, *zx_volumes_from]
+    <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_dev]
     image: mongo:8
     ports:
       - "27017:27017"
     volumes:
       - "$PWD/x-host-share/zx_dev_mongo/data/db:/data/db"
+  zx_dev_code-server:
+    <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_dev]
+    image: linuxserver/code-server:latest
+    ports:
+      - "38100:8443"
+    volumes:
+      - "$PWD/x-host-share/zx_dev_code-server/config:/config"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - PASSWORD=password #optional
+      - HASHED_PASSWORD= #optional
+      - SUDO_PASSWORD=password #optional
+      - SUDO_PASSWORD_HASH= #optional
+      - PROXY_DOMAIN=code-server.my.domain #optional
+      - DEFAULT_WORKSPACE=/config/workspace #optional
   zx_dev_adminer:
-    <<: [*zx_service_base, *zx_volumes_from]
+    <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_dev]
     image: adminer
     ports:
-      - "38080:8080"
+      - "39010:8080"
+    # volumes:
   zx_dev_anaconda3:
-    <<: [*zx_service_base, *zx_volumes_from]
+    <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_dev]
     image: continuumio/anaconda3
     ports:
-      - "8888:8888"
+      - "39020:8888"
     volumes:
       - "$PWD/x-host-share/zx_dev_anaconda3/opt/notebooks/v-shares:/opt/notebooks/v-shares"
     working_dir: "/opt/notebooks"
     command: /bin/bash -c "/opt/conda/bin/conda install jupyter -y --quiet && /opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks --ip='*' --port=8888 --no-browser --allow-root"
   zx_dev_local:
-    <<: [*zx_service_base, *zx_volumes_from]
+    <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_dev]
     image: nginx:1.27.1
+    # ports:
     volumes:
       - "$PWD/x-host-share/zx_dev_local/html:/usr/share/nginx/html"
   zx_dev_api:
-    <<: [*zx_service_base, *zx_volumes_from]
+    <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_dev]
     image: nginx:1.27.1
+    # ports:
     volumes:
       - "$PWD/x-host-share/zx_dev_api/html:/usr/share/nginx/html"
 
+  # zx_tool_firefox:
+  #   <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_tool]
+  #   image: linuxserver/firefox:latest
+  #   ports:
+  #     - "38210:3000"
+  #     # - "38211:3001"
+  #   volumes:
+  #     - "$PWD/x-host-share/zx_tool_firefox/config:/config"
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Etc/UTC
+  #     - FIREFOX_CLI=https://www.linuxserver.io/ #optional
+  #   security_opt:
+  #     - seccomp:unconfined #optional
+  #   shm_size: "1gb"
+  # zx_tool_kasm:
+  #   <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_tool]
+  #   image: linuxserver/kasm:latest
+  #   ports:
+  #     - "38320:443"
+  #     - "38321:3000"
+  #   volumes:
+  #     - "$PWD/x-host-share/zx_tool_kasm/opt:/opt"
+  #     - "$PWD/x-host-share/zx_tool_kasm/profiles:/profiles" #optional
+  #     - /dev/input:/dev/input #optional
+  #     - /run/udev/data:/run/udev/data #optional
+  #   environment:
+  #     - KASM_PORT=443
+  #     - DOCKER_HUB_USERNAME=USER #optional
+  #     - DOCKER_HUB_PASSWORD=PASS #optional
+  #     - DOCKER_MTU=1500 #optional
+  #   privileged: true
+  #   security_opt:
+  #     - apparmor:rootlesskit #optional
   # zx_tool_qbittorrent:  # https://zerodog.top/index.php/archives/28/
-  #   <<: [*zx_service_base, *zx_volumes_from]
+  #   <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_tool]
   #   image: linuxserver/qbittorrent
   #   ports:
-  #     - "38181:8181"
-  #     - "36881:6881"
-  #     - "36881:6881/udp"
+  #     - "39030:8181"
+  #     - "39031:6881"
+  #     - "39031:6881/udp"
   #   volumes:
   #     - "$PWD/x-host-share/zx_tool_qbittorrent/config:/config"
   #     - "$PWD/x-host-share/zx_tool_qbittorrent/downloads:/downloads"
@@ -147,56 +292,30 @@ services:
   #     - UMASK_SET=022
   #     - WEBUI_PORT=8181
   # zx_tool_baidunetdisk:  # https://wulu.zone/posts/baidunetdeck-arm-docker
-  #   <<: [*zx_service_base, *zx_volumes_from]
+  #   <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_tool]
   #   image: emuqi/baidunetdisk-arm64-vnc
   #   ports:
-  #     - "35800:5800"
-  #     - "35900:5900"
+  #     - "39040:5800"
+  #     - "39041:5900"
   #   volumes:
   #     - "$PWD/x-host-share/zx_tool_baidunetdisk/config:/config"
   # zx_tool_ollama:
-  #   <<: [*zx_service_base, *zx_volumes_from]
+  #   <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_tool]
   #   image: ollama/ollama
   #   ports:
   #     - "11434:11434"
   #   volumes:
   #     - "$PWD/x-host-share/zx_tool_ollama/root/.ollama:/root/.ollama"
   # zx_tool_ollama_web:
-  #   <<: [*zx_service_base, *zx_volumes_from]
+  #   <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_tool]
   #   image: ghcr.io/open-webui/open-webui:ollama
   #   ports:
-  #     - "38081:8080"
+  #     - "39050:8080"
   #   volumes:
   #     - "$PWD/x-host-share/zx_tool_ollama_web/root/.ollama:/root/.ollama"
   #     - "$PWD/x-host-share/zx_tool_ollama_web/app/backend/data:/app/backend/data"
   #   environment:
   #     - WEBUI_AUTH=False
-  # zx_tool_firefox:
-  #   <<: [*zx_service_base, *zx_volumes_from]
-  #   image: lscr.io/linuxserver/firefox
-  #   ports:
-  #     - "33000:3000"
-  #     - "33001:3001"
-  #   volumes:
-  #     - "$PWD/x-host-share/zx_tool_firefox/config:/config"
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Asia/Shanghai
-  #   $ docker run -d \
-  #     --name=firefox \
-  #     --security-opt seccomp=unconfined `#optional` \
-  #     -e PUID=1000 \
-  #     -e PGID=1000 \
-  #     -e TZ=Etc/UTC \
-  #     -e FIREFOX_CLI=https://www.linuxserver.io/ `#optional` \
-  #     -p 3000:3000 \
-  #     -p 3001:3001 \
-  #     -v="${PWD}/v-shares__firefox":"/config" \
-  #     --shm-size="1gb" \
-  #     --add-host=host.docker.internal:host-gateway \
-  #     --restart=unless-stopped \
-  #     lscr.io/linuxserver/firefox:latest
 
 networks:
   zx_dev_net:

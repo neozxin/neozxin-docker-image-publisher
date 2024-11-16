@@ -90,6 +90,7 @@ configs:
     content: |
       # alias definition for running things in containers, ref: https://nystudio107.com/blog/dock-life-using-docker-for-all-the-things
       alias x-docker-run='sudo docker run --rm -it --network=host -v "${PWD}":"/app" -w "/app" '
+      alias python='x-docker-run continuumio/anaconda3 python '
       alias node='x-docker-run node:20 '
       alias npm='x-docker-run node:20 npm '
       alias npx='x-docker-run node:20 npx '
@@ -142,7 +143,7 @@ services:
       - "$PWD/x-host-share/zx__portainer/data:/data"
   zx__webtop:
     <<: [*zx_service_base, *zx_volumes_from, *zx_profiles_man]
-    image: linuxserver/webtop:latest
+    image: linuxserver/webtop:ubuntu-xfce
     ports:
       - "3000:3000"
       - "3001:3001"
@@ -160,6 +161,13 @@ services:
       - TZ=Etc/UTC
       - SUBFOLDER=/ #optional
       - TITLE=Webtop #optional
+      # Ubuntu internationalization
+      # - LC_ALL=zh_CN.UTF-8
+      # - DOCKER_MODS=linuxserver/mods:universal-internationalization
+      # Alpine internationalization
+      # - LC_ALL=zh_CN.UTF-8
+      # - DOCKER_MODS=linuxserver/mods:universal-package-install 
+      # - INSTALL_PACKAGES=font-noto-cjk
     security_opt:
       - seccomp:unconfined #optional
     devices:

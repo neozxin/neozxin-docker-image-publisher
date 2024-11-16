@@ -4,6 +4,7 @@ x-zx_service_base: &zx_service_base
   restart: always
   networks:
     - zx_dev_net
+  # user: "${UID}:${GID}"
   extra_hosts:
     - "host.docker.internal:host-gateway"
     - "zx-host:host-gateway"
@@ -85,6 +86,17 @@ configs:
       proxy_set_header X-Real-IP $$remote_addr;
       proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
       proxy_set_header X-Forwarded-Proto $$scheme;
+  zx__webtop__bash_aliases:
+    content: |
+      # alias definition for running things in containers, ref: https://nystudio107.com/blog/dock-life-using-docker-for-all-the-things
+      alias x-docker-run='sudo docker run --rm -it --network=host -v "${PWD}":"/app" -w "/app" '
+      alias node='x-docker-run node:20 '
+      alias npm='x-docker-run node:20 npm '
+      alias npx='x-docker-run node:20 npx '
+      alias deno='x-docker-run denoland/deno '
+      alias aws='x-docker-run -v ~/.aws:/root/.aws amazon/aws-cli '
+      alias ffmpeg='x-docker-run jrottenberg/ffmpeg '
+      alias tree='f(){ x-docker-run johnfmorton/tree-cli tree "$@";  unset -f f; }; f'
   zx_dev_telegraf_conf:
     content: |
       [agent]
@@ -136,6 +148,12 @@ services:
       - "3001:3001"
     volumes:
       - "$PWD/x-host-share/zx__webtop/config:/config"
+    configs:
+      - source: zx__webtop__bash_aliases
+        target: "/etc/bash/00-bash_aliases.sh"
+        mode: 0777
+        # uid: "1000"
+        # gid: "1000"
     environment:
       - PUID=1000
       - PGID=1000

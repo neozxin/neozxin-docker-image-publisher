@@ -33,7 +33,7 @@ configs:
         # }
         location ~ ^/portainer(?:(/.*)|$) {
           if ($$request_uri = "/portainer") {
-            return 301 /portainer/;
+            return 301 $$xorigin/portainer/;
           }
           rewrite ^/portainer/(.*)$ /$1 break;
           proxy_pass http://zx__portainer:9000;
@@ -42,7 +42,7 @@ configs:
         }
         location ~ ^/webtop(?:(/.*)|$) {
           if ($$request_uri = "/webtop") {
-            return 301 /webtop/;
+            return 301 $$xorigin/webtop/;
           }
           rewrite ^/webtop/(.*)$ /$1 break;
           proxy_pass http://zx__webtop:3000;
@@ -54,7 +54,7 @@ configs:
         }
         location ~ ^/telegraf(?:(/.*)|$) {
           if ($$request_uri = "/telegraf") {
-            return 301 /telegraf/;
+            return 301 $$xorigin/telegraf/;
           }
           rewrite ^/telegraf/(.*)$ /$1 break;
           proxy_pass http://zx_dev_telegraf:9273;
